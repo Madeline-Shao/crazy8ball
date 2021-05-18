@@ -210,6 +210,7 @@ void sdl_show(void) {
     SDL_RenderDrawRect(renderer, boundary);
     free(boundary);
 
+    
     SDL_RenderPresent(renderer);
 }
 

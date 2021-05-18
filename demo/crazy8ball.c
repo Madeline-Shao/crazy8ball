@@ -46,17 +46,9 @@ int main(){
     while (!sdl_is_done()){
         sdl_render_scene(scene);
         //scene_tick(scene, time_since_last_tick());  
-        //SDL_Texture *texture = IMG_LoadTexture(renderer, "ditto.jpg");
-        // printf("%p\n", texture);
-        // SDL_Rect *boundary = malloc(sizeof(*boundary));
-        // boundary->x = 0;
-        // boundary->y = 0;
-        // boundary->w = 512;
-        // boundary->h = 433;
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
-        SDL_RenderPresent(renderer);
-        // free(boundary);
-        // SDL_DestroyTexture(texture);
+        //SDL_RenderCopy(renderer, texture, NULL, NULL);
+        //SDL_RenderPresent(renderer);
+        // free(boundary);   
     }
     scene_free(scene);
 }
