@@ -68,7 +68,6 @@ list_t *circle_init(double radius){
         *v = (vector_t) {radius * cos(angle), radius * sin(angle)};
         list_add(circle_list, (void *) v);
     }
-
     return circle_list;
 }
 
