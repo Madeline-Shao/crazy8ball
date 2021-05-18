@@ -11,7 +11,7 @@
 #include "force_params.h"
 #include "collision_params.h"
 #include "collision.h"
-#include "SDL_image.h"
+#include <SDL2/SDL_image.h>
 
 const double GRAVITY_DISTANCE_BOUND = 5;
 const double DESTRUCTIVE_CONSTANT = 1.0;
