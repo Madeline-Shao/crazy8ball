@@ -206,12 +206,22 @@ void sdl_show(void) {
     boundary->y = max_pixel.y;
     boundary->w = max_pixel.x - min_pixel.x;
     boundary->h = min_pixel.y - max_pixel.y;
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderDrawRect(renderer, boundary);
     free(boundary);
 
-    
     SDL_RenderPresent(renderer);
+}
+
+void sdl_draw_sprite(body_t *body){
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, body_get_image(body));
+    SDL_Rect *boundary = malloc(sizeof(*boundary));
+    boundary->x = body_get_centroid(body).x - body_get_width(body) / 2;
+    boundary->y = body_get_centroid(body).y - body_get_height(body) / 2;
+    boundary->w = body_get_width(body);
+    boundary->h = body_get_height(body);
+    //printf("coordinates%d,%d\n", boundary->x, boundary->y);
+    SDL_RenderCopy(renderer, texture, NULL, boundary);
 }
 
 void sdl_render_scene(scene_t *scene) {
@@ -219,9 +229,7 @@ void sdl_render_scene(scene_t *scene) {
     size_t body_count = scene_bodies(scene);
     for (size_t i = 0; i < body_count; i++) {
         body_t *body = scene_get_body(scene, i);
-        list_t *shape = body_get_shape(body);
-        sdl_draw_polygon(shape, body_get_color(body));
-        list_free(shape);
+        sdl_draw_sprite(body);
     }
     sdl_show();
 }

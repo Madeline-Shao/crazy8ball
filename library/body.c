@@ -6,6 +6,7 @@
 #include "vector.h"
 #include "body.h"
 #include "polygon.h"
+#include <SDL2/SDL_image.h>
 
 const double ORIGINAL_ANGLE = 0.0;
 
@@ -21,6 +22,9 @@ typedef struct body{
     void *info;
     free_func_t info_freer;
     bool removed_marker;
+    SDL_Surface *image;
+    double height;
+    double width;
 } body_t;
 
 body_t *body_init(list_t *shape, double mass, rgb_color_t color){
@@ -60,10 +64,16 @@ body_t *body_init_with_info(
     list_t *shape,
     double mass,
     rgb_color_t color,
+    SDL_Surface *image,
+    double width,
+    double height,
     void *info,
     free_func_t info_freer
 ){
     body_t *new_body = body_init(shape, mass, color);
+    new_body->image = image;
+    new_body->width = width;
+    new_body->height = height;
     new_body->info = info;
     new_body->info_freer = info_freer;
 
@@ -112,6 +122,18 @@ double body_get_angle(body_t *body) {
 
 void *body_get_info(body_t *body){
     return body->info;
+}
+
+SDL_Surface *body_get_image(body_t *body){
+    return body->image;
+}
+
+double body_get_height(body_t *body){
+    return body->height;
+}
+
+double body_get_width(body_t *body){
+    return body->width;
 }
 
 void body_set_centroid(body_t *body, vector_t x){

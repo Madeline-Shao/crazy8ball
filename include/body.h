@@ -10,6 +10,7 @@
 #include "vector.h"
 #include "body.h"
 #include "polygon.h"
+#include <SDL2/SDL_image.h>
 
 /**
  * A rigid body constrained to the plane.
@@ -42,6 +43,9 @@ body_t *body_init_with_info(
     list_t *shape,
     double mass,
     rgb_color_t color,
+    SDL_Surface *image,
+    double width,
+    double height,
     void *info,
     free_func_t info_freer
 );
@@ -104,6 +108,12 @@ rgb_color_t body_get_color(body_t *body);
  * @return the info passed to body_init()
  */
 void *body_get_info(body_t *body);
+
+SDL_Surface *body_get_image(body_t *body);
+
+double body_get_height(body_t *body);
+
+double body_get_width(body_t *body);
 
 /**
  * Translates a body to a new position.
