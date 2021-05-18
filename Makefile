@@ -237,6 +237,8 @@ bin/pegs.exe: out/pegs.obj out/sdl_wrapper.obj $(STUDENT_OBJS)
 bin/breakout.exe: out/breakout.obj out/sdl_wrapper.obj $(STUDENT_OBJS)
 	$(CC) $^ $(CFLAGS) -link $(LINKEROPTS) $(LIBS) -out:"$@"
 
+bin/crazy8ball.exe: out/crazy8ball.obj out/sdl_wrapper.obj $(STUDENT_OBJS)
+	$(CC) $^ $(CFLAGS) -link $(LINKEROPTS) $(LIBS) -out:"$@"
 # Builds the test suite executables from the corresponding test .o file
 # and the library .o files. The only difference from the demo build command
 # is that it doesn't link the SDL libraries.
@@ -250,6 +252,7 @@ bin/pacman bin\pacman: bin/pacman.exe ;
 bin/nbodies bin\nbodies: bin/nbodies.exe;
 bin/damping bin\damping: bin/damping.exe;
 bin/spaceinvaders bin\spaceinvaders: bin/spaceinvaders.exe
+bin/crazy8ball bin\crazy8ball: bin/crazy8ball.exe
 bin/test_suite_% bin\test_suite_%: bin/test_suite_%.exe ;
 
 # CMD commands to test and clean
