@@ -1,5 +1,5 @@
 # List of demo programs
-DEMOS = bounce gravity pacman nbodies damping spaceinvaders breakout pegs
+DEMOS = bounce gravity pacman nbodies damping spaceinvaders breakout pegs crazy8ball
 # List of C files in "libraries" that we provide
 STAFF_LIBS = test_util sdl_wrapper
 # List of C files in "libraries" that you will write.
@@ -85,6 +85,9 @@ bin/pegs: out/pegs.o out/sdl_wrapper.o $(STUDENT_OBJS)
 		$(CC) $(CFLAGS) $(LIBS) $^ -o $@
 
 bin/breakout: out/breakout.o out/sdl_wrapper.o $(STUDENT_OBJS)
+		$(CC) $(CFLAGS) $(LIBS) $^ -o $@
+
+bin/crazy8ball: out/crazy8ball.o out/sdl_wrapper.o $(STUDENT_OBJS)
 		$(CC) $(CFLAGS) $(LIBS) $^ -o $@
 
 # Builds the test suite executables from the corresponding test .o file

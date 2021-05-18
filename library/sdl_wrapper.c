@@ -106,7 +106,7 @@ char get_keycode(SDL_Keycode key) {
     }
 }
 
-void sdl_init(vector_t min, vector_t max) {
+SDL_Renderer * sdl_init(vector_t min, vector_t max) {
     // Check parameters
     assert(min.x < max.x);
     assert(min.y < max.y);

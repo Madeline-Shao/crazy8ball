@@ -7,6 +7,7 @@
 #include "scene.h"
 #include "body.h"
 #include "vector.h"
+#include <SDL2/SDL_image.h>
 
 // Values passed to a key handler when the given arrow key is pressed
 typedef enum {
@@ -47,7 +48,7 @@ typedef void (*key_handler_t)(char key, key_event_type_t type, double held_time,
  * @param min the x and y coordinates of the bottom left of the scene
  * @param max the x and y coordinates of the top right of the scene
  */
-void sdl_init(vector_t min, vector_t max);
+SDL_Renderer * sdl_init(vector_t min, vector_t max);
 
 /**
  * Processes all SDL events and returns whether the window has been closed.
