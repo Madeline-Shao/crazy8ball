@@ -62,7 +62,7 @@ int main(){
     list_t *rect = rect_init(300, 200);
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
     SDL_Surface *image = IMG_Load("demo/small.png");
-    SDL_Surface *image2 = IMG_Load("demo/ditto.jpg");
+    SDL_Surface *image2 = IMG_Load("demo/sreemanti.png");
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, image);
     SDL_Texture *texture2 = SDL_CreateTextureFromSurface(renderer, image2);
     
