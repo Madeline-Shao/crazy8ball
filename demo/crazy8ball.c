@@ -39,7 +39,6 @@ const vector_t HIGH_RIGHT_CORNER = {1000, 700};
 
 int main(){
     scene_t *scene = scene_init();
-
     SDL_Renderer *renderer = sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
     SDL_Surface *image = IMG_Load("demo/ditto.jpg");
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, image);
