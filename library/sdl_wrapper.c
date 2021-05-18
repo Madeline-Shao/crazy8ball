@@ -10,7 +10,7 @@
 
 const char WINDOW_TITLE[] = "CS 3";
 const int WINDOW_WIDTH = 1000;
-const int WINDOW_HEIGHT = 700;
+const int WINDOW_HEIGHT = 600;
 const double MS_PER_S = 1e3;
 
 /**

@@ -16,7 +16,7 @@
 #include <SDL2/SDL_image.h>
 
 const vector_t LOW_LEFT_CORNER = {0, 0};
-const vector_t HIGH_RIGHT_CORNER = {1000, 700};
+const vector_t HIGH_RIGHT_CORNER = {1000, 600};
 
 
 // body_t *init_stick(int pts, double radius, double mass, rgb_color_t rgb_color) {
@@ -59,16 +59,15 @@ list_t *rect_init(double width, double height) {
 int main(){
     scene_t *scene = scene_init();
     SDL_Renderer *renderer = sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
-    list_t *rect = rect_init(300, 200);
+    list_t *rect = rect_init(1000, 600);
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
     SDL_Surface *image = IMG_Load("demo/small.png");
-    SDL_Surface *image2 = IMG_Load("demo/sreemanti.png");
+    SDL_Surface *image2 = IMG_Load("demo/pool_table.png");
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, image);
     SDL_Texture *texture2 = SDL_CreateTextureFromSurface(renderer, image2);
     
-    body_t *ditto_bod = body_init_with_info(rect, 10, (rgb_color_t) {0,0,0}, image2, 300, 200, NULL, free);
-    body_set_centroid(ditto_bod, (vector_t) {300, 200});
-    body_set_velocity(ditto_bod, (vector_t) {10, 10});
+    body_t *ditto_bod = body_init_with_info(rect, 10, (rgb_color_t) {0,0,0}, image2, 800, 480, NULL, free);
+    body_set_centroid(ditto_bod, (vector_t) {500, 300});
     scene_add_body(scene, ditto_bod);
     
     while (!sdl_is_done()){
