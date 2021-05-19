@@ -38,8 +38,8 @@ const double HOLE_CONSTANT = 45;
 const double CORRECTION_CONSTANT = 16;
 const double BREEZY_CONSTANT = 12;
 const double BALL_ELASTICITY = 1.0;
-const double MU = 5;
-const double G = 10;
+const double MU = 0.3;
+const double G = 1;
 
 // // stick force buildup, animation, and ball collision
 // body_t *shoot_stick(vector_t initial_position, int direction, double width,

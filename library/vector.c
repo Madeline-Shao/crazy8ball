@@ -48,3 +48,7 @@ vector_t vec_rotate(vector_t v, double angle){
     vector_t v_rotated = {v_rotated_x, v_rotated_y};
     return v_rotated;
 }
+
+int vec_equal(vector_t v1, vector_t v2){
+    return v1.x == v2.x && v1.y == v2.y;
+}

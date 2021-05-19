@@ -92,4 +92,6 @@ double vec_cross(vector_t v1, vector_t v2);
  */
 vector_t vec_rotate(vector_t v, double angle);
 
+int vec_equal(vector_t v1, vector_t v2);
+
 #endif // #ifndef __VECTOR_H__
