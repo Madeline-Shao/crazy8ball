@@ -12,8 +12,8 @@
 #include "forces.h"
 #include "force_params.h"
 #include "force_wrapper.h"
-#include <SDL2/SDL_image.h>
 #include <string.h>
+#include <SDL2/SDL_image.h>
 
 const vector_t LOW_LEFT_CORNER = {0, 0};
 const vector_t HIGH_RIGHT_CORNER = {1500, 900};
