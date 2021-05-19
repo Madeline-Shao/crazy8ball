@@ -224,9 +224,6 @@ void sdl_draw_sprite(body_t *body){
         //printf("coordinates%d,%d\n", boundary->x, boundary->y);
         SDL_RenderCopy(renderer, texture, NULL, boundary);
     }
-    else {
-        sdl_draw_polygon(body_get_shape(body), body_get_color(body));
-    }
 }
 
 void sdl_render_scene(scene_t *scene) {

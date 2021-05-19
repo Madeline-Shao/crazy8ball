@@ -61,3 +61,33 @@ body_t *one_body_params_get_body(one_body_params_t *params){
     return params->body;
 }
 
+typedef struct two_constants_one_body_params{
+    double constant1;
+    double constant2;
+    body_t *body;
+} two_constants_one_body_params_t;
+
+two_constants_one_body_params_t *two_constants_one_body_params_init(double constant1, double constant2, body_t *body){
+    two_constants_one_body_params_t *params = malloc(sizeof(two_constants_one_body_params_t));
+    params->constant1 = constant1;
+    params->constant2 = constant2;
+    params->body = body;
+    return params;
+}
+
+void two_constants_one_body_params_free(two_constants_one_body_params_t *params){
+    free(params);
+}
+  
+double two_constants_one_body_params_get_constant1(two_constants_one_body_params_t *params){
+    return params->constant1;
+}
+
+double two_constants_one_body_params_get_constant2(two_constants_one_body_params_t *params){
+    return params->constant2;
+}
+ 
+body_t *two_constants_one_body_params_get_body(two_constants_one_body_params_t *params){
+    return params->body;
+}
+

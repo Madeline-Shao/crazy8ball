@@ -12,6 +12,7 @@
 typedef struct two_body_params two_body_params_t;
 
 typedef struct one_body_params one_body_params_t;
+typedef struct two_constants_one_body_params two_constants_one_body_params_t;
 /**
  * Allocates memory for a force parameter with the given parameters.
  *
@@ -79,6 +80,16 @@ double one_body_params_get_constant(one_body_params_t *params);
  * @return the first body (body_t)
  */  
 body_t *one_body_params_get_body(one_body_params_t *params);
+
+two_constants_one_body_params_t *two_constants_one_body_params_init(double constant1, double constant2, body_t *body);
+
+void two_constants_one_body_params_free(two_constants_one_body_params_t *params);
+  
+double two_constants_one_body_params_get_constant1(two_constants_one_body_params_t *params);
+
+double two_constants_one_body_params_get_constant2(two_constants_one_body_params_t *params);
+ 
+body_t *two_constants_one_body_params_get_body(two_constants_one_body_params_t *params);
 
 
 #endif // #ifndef __FORCE_PARAMS_H__

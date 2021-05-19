@@ -55,6 +55,8 @@ void create_spring(scene_t *scene, double k, body_t *body1, body_t *body2);
  */
 void create_drag(scene_t *scene, double gamma, body_t *body);
 
+void create_friction(scene_t *scene, double mu, double g, body_t *body);
+
 /**
  * Adds a force creator to a scene that calls a given collision handler
  * function each time two bodies collide.

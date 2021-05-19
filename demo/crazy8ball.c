@@ -31,13 +31,15 @@ const double TABLE_HEIGHT = 480;
 const double WALL_THICKNESS = 10;
 const double WALL_MASS = INFINITY;
 const double WALL_TABLE_WIDTH_DIFF = 140;
-const double TABLE_WALL_THICKNESS = 49;
+const double TABLE_WALL_THICKNESS = 50;
 const double WALL_GAP = 20;
 const double HOLE_RADIUS = 17.36;
 const double HOLE_CONSTANT = 45;
 const double CORRECTION_CONSTANT = 16;
 const double BREEZY_CONSTANT = 12;
 const double BALL_ELASTICITY = 1.0;
+const double MU = 5;
+const double G = 10;
 
 // // stick force buildup, animation, and ball collision
 // body_t *shoot_stick(vector_t initial_position, int direction, double width,
@@ -257,6 +259,7 @@ void add_forces(scene_t *scene){
     for(int i = 0; i < scene_bodies(scene) - 1; i++){
         body_t *body1 = scene_get_body(scene, i);
         if(!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL") || !strcmp(body_get_info(body1), "8_BALL") || !strcmp(body_get_info(body1), "CUE_BALL")){
+            create_friction(scene, MU, G, body1);
             for (int j = i + 1; j < scene_bodies(scene); j++) {
                 body_t *body2 = scene_get_body(scene, j);
                 if(!strcmp(body_get_info(body2), "SOLID_BALL") || !strcmp(body_get_info(body2), "STRIPED_BALL") || !strcmp(body_get_info(body2), "8_BALL") || !strcmp(body_get_info(body2), "CUE_BALL") || !strcmp(body_get_info(body2), "WALL")){

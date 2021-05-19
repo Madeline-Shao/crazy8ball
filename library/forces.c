@@ -11,7 +11,6 @@
 #include "force_params.h"
 #include "collision_params.h"
 #include "collision.h"
-#include <SDL2/SDL_image.h>
 
 const double GRAVITY_DISTANCE_BOUND = 5;
 const double DESTRUCTIVE_CONSTANT = 1.0;
@@ -87,6 +86,20 @@ void create_drag(scene_t *scene, double gamma, body_t *body){
                             params, bodies, (free_func_t) one_body_params_free);
 }
 
+void friction_creator(two_constants_one_body_params_t *params){
+    double force_component = two_constants_one_body_params_get_constant1(params) 
+                            * two_constants_one_body_params_get_constant2(params)
+                            * body_get_mass(two_constants_one_body_params_get_body(params));
+    body_add_force(two_constants_one_body_params_get_body(params), (vector_t) {force_component, force_component});
+}
+
+void create_friction(scene_t *scene, double mu, double g, body_t *body){
+    two_constants_one_body_params_t *params = two_constants_one_body_params_init(mu, g, body);
+    list_t *bodies = list_init(1, (free_func_t) body_free);
+    list_add(bodies, body);
+    scene_add_bodies_force_creator(scene, (force_creator_t) friction_creator,
+                            params, bodies, (free_func_t) two_constants_one_body_params_free);
+}
 // Check collisions
 void collision_creator(collision_params_t *params){
     body_t *body1 = collision_params_get_body_1(params);
