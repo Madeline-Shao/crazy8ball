@@ -9,8 +9,8 @@
 #include "body.h"
 
 const char WINDOW_TITLE[] = "CS 3";
-const int WINDOW_WIDTH = 1000;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 1500;
+const int WINDOW_HEIGHT = 900;
 const double MS_PER_S = 1e3;
 
 /**
@@ -214,14 +214,19 @@ void sdl_show(void) {
 }
 
 void sdl_draw_sprite(body_t *body){
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, body_get_image(body));
-    SDL_Rect *boundary = malloc(sizeof(*boundary));
-    boundary->x = body_get_centroid(body).x - body_get_width(body) / 2;
-    boundary->y = body_get_centroid(body).y - body_get_height(body) / 2;
-    boundary->w = body_get_width(body);
-    boundary->h = body_get_height(body);
-    //printf("coordinates%d,%d\n", boundary->x, boundary->y);
-    SDL_RenderCopy(renderer, texture, NULL, boundary);
+    if (body_get_image(body) != NULL) {
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, body_get_image(body));
+        SDL_Rect *boundary = malloc(sizeof(*boundary));
+        boundary->x = body_get_centroid(body).x - body_get_width(body) / 2;
+        boundary->y = body_get_centroid(body).y - body_get_height(body) / 2;
+        boundary->w = body_get_width(body);
+        boundary->h = body_get_height(body);
+        //printf("coordinates%d,%d\n", boundary->x, boundary->y);
+        SDL_RenderCopy(renderer, texture, NULL, boundary);
+    }
+    else {
+        sdl_draw_polygon(body_get_shape(body), body_get_color(body));
+    }
 }
 
 void sdl_render_scene(scene_t *scene) {
