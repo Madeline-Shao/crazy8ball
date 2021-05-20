@@ -22,7 +22,7 @@ void newtonian_gravity_creator(two_body_params_t *params){
     double y2 = body_get_centroid(two_body_params_get_body_2(params)).y;
 
     double r = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
-    if (r > GRAVITY_DISTANCE_BOUND) {   
+    if (r > GRAVITY_DISTANCE_BOUND) {
         double magnitude = two_body_params_get_constant(params)
                          * body_get_mass(two_body_params_get_body_1(params))
                          * body_get_mass(two_body_params_get_body_2(params)) / (r * r);
@@ -92,9 +92,12 @@ void friction_creator(two_constants_one_body_params_t *params){
         double y = body_get_velocity(two_constants_one_body_params_get_body(params)).y;
         double r = sqrt(pow(x, 2) + pow(y, 2));
 
-        double force_component = -1 * two_constants_one_body_params_get_constant1(params) 
+        double force_component = -1 * two_constants_one_body_params_get_constant1(params)
                                 * two_constants_one_body_params_get_constant2(params)
                                 * body_get_mass(two_constants_one_body_params_get_body(params));
+        // if (r < 0.5) {
+        //     body_set_velocity(two_constants_one_body_params_get_body(params), (vector_t){0, 0});
+        // }
         body_add_force(two_constants_one_body_params_get_body(params), (vector_t) {force_component * (x / r), force_component * (y / r)});
     }
 }

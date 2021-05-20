@@ -24,7 +24,7 @@ const double BALL_MASS = 10;
 const double NUM_BALLS  = 16;
 const double CUE_STICK_WIDTH = 400;
 const double CUE_STICK_HEIGHT = 10;
-const double CUE_STICK_MASS = 30;
+const double CUE_STICK_MASS = INFINITY;
 const rgb_color_t WHITE_COLOR = {1, 1, 1};
 const double TABLE_WIDTH = 800;
 const double TABLE_HEIGHT = 480;
@@ -37,10 +37,10 @@ const double HOLE_RADIUS = 17.36;
 const double HOLE_CONSTANT = 45;
 const double CORRECTION_CONSTANT = 16;
 const double BREEZY_CONSTANT = 12;
-const double BALL_ELASTICITY = 1.0;
-const double MU = 0.6;
-const double G = 1;
-const double DRAG_DIST = 200;
+const double BALL_ELASTICITY = 0.6;
+const double MU = 0.9;
+const double G = 15;
+const double DRAG_DIST = 800;
 
 // // stick force buildup, animation, and ball collision
 // body_t *shoot_stick(vector_t initial_position, int direction, double width,
@@ -75,6 +75,10 @@ void player_motion_handler(double x, double y, double xrel, double yrel, void *a
 
     }
     else{
+        vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball((scene_t *)aux)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+        body_set_centroid(get_cue_stick((scene_t *)aux), cue_centroid);
+        body_set_origin(get_cue_stick((scene_t *)aux), body_get_centroid(get_cue_ball((scene_t *)aux)));
+        // printf("origin: x: %f, y: %f\n", body_get_origin(get_cue_stick((scene_t *)aux)).x, body_get_origin(get_cue_stick((scene_t *)aux)).y);
         body_t *ball = get_cue_ball((scene_t *)aux);
         double angle = 2 * M_PI * (sqrt(pow(xrel, 2) + pow(yrel, 2))) / DRAG_DIST;
         // first quadrant
@@ -203,7 +207,7 @@ void add_balls(scene_t *scene) {
         else if (i == 16) {
             pool_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, ball_image,
                                         2*BALL_RADIUS, 2*BALL_RADIUS, "CUE_BALL", NULL);
-            // body_add_impulse(pool_ball, (vector_t) {-2000, 0});
+            body_add_impulse(pool_ball, (vector_t) {-10000, 0});
         }
         else {
             pool_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, ball_image,

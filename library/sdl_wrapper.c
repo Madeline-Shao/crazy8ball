@@ -261,18 +261,23 @@ void sdl_draw_sprite(body_t *body, scene_t *scene){
         boundary->y = body_get_centroid(body).y - body_get_height(body) / 2;
         boundary->w = body_get_width(body);
         boundary->h = body_get_height(body);
-        //printf("coordinates%d,%d\n", boundary->x, boundary->y);
 
         if (!strcmp(body_get_info(body), "CUE_STICK")){
+            // printf("coordinates%d,%d\n", boundary->x, boundary->y);
+            double x_diff = body_get_origin(body).x - boundary->x;
+            double y_diff = body_get_origin(body).y - boundary->y;
             SDL_Point *origin = malloc(sizeof(SDL_Point));
-            *origin = (SDL_Point) {body_get_origin(body).x, body_get_origin(body).y};
-            SDL_RenderCopyEx(renderer, texture, NULL, boundary, -1 * body_get_angle(body), origin, SDL_FLIP_NONE);
+            *origin = (SDL_Point){x_diff, y_diff};
+            SDL_RenderCopyEx(renderer, texture, NULL, boundary, -1 * body_get_angle(body) * 180 / M_PI, origin, SDL_FLIP_NONE);
             // possible SDL_Point free needed
         }
         else{
             SDL_RenderCopy(renderer, texture, NULL, boundary);
         }
     }
+    // else {
+    //     sdl_draw_polygon(body_get_shape(body), body_get_color(body));
+    // }
 }
 
 void sdl_render_scene(scene_t *scene) {
