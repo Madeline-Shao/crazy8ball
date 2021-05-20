@@ -38,28 +38,98 @@ const double HOLE_CONSTANT = 45;
 const double CORRECTION_CONSTANT = 16;
 const double BREEZY_CONSTANT = 12;
 const double BALL_ELASTICITY = 1.0;
-const double MU = 0.3;
+const double MU = 0.6;
 const double G = 1;
+const double DRAG_DIST = 200;
 
 // // stick force buildup, animation, and ball collision
 // body_t *shoot_stick(vector_t initial_position, int direction, double width,
 
 // }
 
+body_t *get_cue_ball(scene_t *scene) {
+    for (int i = 0; i < scene_bodies(scene); i++) {
+        body_t *body = scene_get_body(scene, i);
+        if (strcmp(body_get_info(body),"CUE_BALL") == 0) {
+            return body;
+        }
+    }
+    return NULL;
+}
+
+body_t *get_cue_stick(scene_t *scene) {
+    for (int i = 0; i < scene_bodies(scene); i++) {
+        body_t *body = scene_get_body(scene, i);
+        if (strcmp(body_get_info(body),"CUE_STICK") == 0) {
+            return body;
+        }
+    }
+    return NULL;
+}
+
 
 void player_motion_handler(double x, double y, double xrel, double yrel, void *aux) {
-    printf("mouse motion - x: %f, y: %f, xrel: %f, yrel: %f\n", x, y, xrel, yrel);
+    // if on cue ball then move cue ball
+    // if on force bar then change prepare to shoot stick
+    if (0 == 0){
+
+    }
+    else{
+        body_t *ball = get_cue_ball((scene_t *)aux);
+        double angle = 2 * M_PI * (sqrt(pow(xrel, 2) + pow(yrel, 2))) / DRAG_DIST;
+        // first quadrant
+        if (x > body_get_centroid(ball).x && y < body_get_centroid(ball).y){
+            // counterclockwise
+            if (-1 * yrel >= xrel){
+                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+            }
+            else{
+                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+            }
+        }
+        // second quadrant
+        else if (x < body_get_centroid(ball).x && y < body_get_centroid(ball).y){
+            // counterclockwise
+            if (yrel >= xrel){
+                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+            }
+            else{
+                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+            }
+        }
+        // third quadrant
+        else if (x < body_get_centroid(ball).x && y > body_get_centroid(ball).y){
+            // counterclockwise
+            if (-1 * yrel <= xrel){
+                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+            }
+            else{
+                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+            }
+        }
+        // fourth quandrant
+        else if (x > body_get_centroid(ball).x && y > body_get_centroid(ball).y){
+            // counterclockwise
+            if (yrel <= xrel){
+                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+            }
+            else{
+                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+            }
+        }
+    }
+    // printf("mouse motion - x: %f, y: %f, xrel: %f, yrel: %f\n", x, y, xrel, yrel);
 }
 
 // // stick rotation
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
     if (key == SDL_BUTTON_LEFT) {
         if (type == MOUSE_DOWN) {
-            printf("mouse down  - x: %f, y: %f\n", x, y);
+            // printf("mouse down  - x: %f, y: %f\n", x, y);
             sdl_on_motion((motion_handler_t)player_motion_handler, aux);
         }
         if (type == MOUSE_UP) {
-            printf("mouse up - x: %f, y: %f\n", x, y);
+            // printf("mouse up - x: %f, y: %f\n", x, y);
             sdl_on_motion(NULL, NULL);
         }
     }
@@ -95,15 +165,6 @@ list_t *circle_init(double radius){
     return circle_list;
 }
 
-body_t *get_cue_ball(scene_t *scene) {
-    for (int i = 0; i < scene_bodies(scene); i++) {
-        body_t *body = scene_get_body(scene, i);
-        if (strcmp(body_get_info(body),"CUE_BALL") == 0) {
-            return body;
-        }
-    }
-    return NULL;
-}
 
 void add_stick(scene_t * scene) {
     list_t *stick_shape = rect_init(CUE_STICK_WIDTH, CUE_STICK_HEIGHT);
@@ -111,6 +172,7 @@ void add_stick(scene_t * scene) {
     body_t *cue_stick = body_init_with_info(stick_shape, CUE_STICK_MASS, WHITE_COLOR, ball_image, CUE_STICK_WIDTH, CUE_STICK_HEIGHT, "CUE_STICK", NULL);
     vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball(scene)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
     body_set_centroid(cue_stick, cue_centroid);
+    body_set_origin(cue_stick, body_get_centroid(get_cue_ball(scene)));
     scene_add_body(scene, cue_stick);
 }
 
@@ -141,7 +203,7 @@ void add_balls(scene_t *scene) {
         else if (i == 16) {
             pool_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, ball_image,
                                         2*BALL_RADIUS, 2*BALL_RADIUS, "CUE_BALL", NULL);
-            body_add_impulse(pool_ball, (vector_t) {-2000, 0});
+            // body_add_impulse(pool_ball, (vector_t) {-2000, 0});
         }
         else {
             pool_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, ball_image,

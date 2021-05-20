@@ -17,6 +17,7 @@ typedef struct body{
     vector_t centroid;
     vector_t *velocity;
     double angle;
+    vector_t origin;
     vector_t force;
     vector_t impulse;
     void *info;
@@ -45,6 +46,9 @@ body_t *body_init(list_t *shape, double mass, rgb_color_t color){
 
 
     new_body->angle = ORIGINAL_ANGLE;
+
+    new_body->origin = centroid;
+
     polygon_rotate(new_body->shape, new_body->angle, new_body->centroid);
 
     vector_t force = {0, 0};
@@ -136,6 +140,10 @@ double body_get_width(body_t *body){
     return body->width;
 }
 
+vector_t body_get_origin(body_t *body){
+    return body->origin;
+}
+
 void body_set_centroid(body_t *body, vector_t x){
     polygon_translate(body->shape, vec_subtract(x, body->centroid));
     body->centroid = x;
@@ -156,8 +164,12 @@ void body_set_velocity(body_t *body, vector_t v){
 }
 
 void body_set_rotation(body_t *body, double angle){
-    polygon_rotate(body->shape, angle - body->angle, body->centroid);
+    polygon_rotate(body->shape, angle - body->angle, body->origin);
     body->angle = angle;
+}
+
+void body_set_origin(body_t *body, vector_t origin){
+    body->origin = origin;
 }
 
 void body_add_force(body_t *body, vector_t force){

@@ -253,7 +253,7 @@ void sdl_show(void) {
     SDL_RenderPresent(renderer);
 }
 
-void sdl_draw_sprite(body_t *body){
+void sdl_draw_sprite(body_t *body, scene_t *scene){
     if (body_get_image(body) != NULL) {
         SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, body_get_image(body));
         SDL_Rect *boundary = malloc(sizeof(*boundary));
@@ -262,7 +262,16 @@ void sdl_draw_sprite(body_t *body){
         boundary->w = body_get_width(body);
         boundary->h = body_get_height(body);
         //printf("coordinates%d,%d\n", boundary->x, boundary->y);
-        SDL_RenderCopy(renderer, texture, NULL, boundary);
+
+        if (!strcmp(body_get_info(body), "CUE_STICK")){
+            SDL_Point *origin = malloc(sizeof(SDL_Point));
+            *origin = (SDL_Point) {body_get_origin(body).x, body_get_origin(body).y};
+            SDL_RenderCopyEx(renderer, texture, NULL, boundary, -1 * body_get_angle(body), origin, SDL_FLIP_NONE);
+            // possible SDL_Point free needed
+        }
+        else{
+            SDL_RenderCopy(renderer, texture, NULL, boundary);
+        }
     }
 }
 
@@ -271,7 +280,7 @@ void sdl_render_scene(scene_t *scene) {
     size_t body_count = scene_bodies(scene);
     for (size_t i = 0; i < body_count; i++) {
         body_t *body = scene_get_body(scene, i);
-        sdl_draw_sprite(body);
+        sdl_draw_sprite(body, scene);
     }
     sdl_show();
 }

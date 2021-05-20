@@ -115,6 +115,8 @@ double body_get_height(body_t *body);
 
 double body_get_width(body_t *body);
 
+vector_t body_get_origin(body_t *body);
+
 /**
  * Translates a body to a new position.
  * The position is specified by the position of the body's center of mass.
@@ -149,6 +151,10 @@ void body_set_velocity(body_t *body, vector_t v);
  * @param angle the body's new angle in radians. Positive is counterclockwise.
  */
 void body_set_rotation(body_t *body, double angle);
+
+
+void body_set_origin(body_t *body, vector_t origin);
+
 
 /**
  * Applies a force to a body over the current tick.
