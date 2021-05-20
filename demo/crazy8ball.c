@@ -81,40 +81,40 @@ void player_motion_handler(double x, double y, double xrel, double yrel, void *a
         if (x > body_get_centroid(ball).x && y < body_get_centroid(ball).y){
             // counterclockwise
             if (-1 * yrel >= xrel){
-                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+                body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
             }
             else{
-                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+                body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
             }
         }
         // second quadrant
         else if (x < body_get_centroid(ball).x && y < body_get_centroid(ball).y){
             // counterclockwise
             if (yrel >= xrel){
-                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+                body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
             }
             else{
-                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+                body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
             }
         }
         // third quadrant
         else if (x < body_get_centroid(ball).x && y > body_get_centroid(ball).y){
             // counterclockwise
             if (-1 * yrel <= xrel){
-                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+                body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
             }
             else{
-                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+                body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
             }
         }
         // fourth quandrant
         else if (x > body_get_centroid(ball).x && y > body_get_centroid(ball).y){
             // counterclockwise
             if (yrel <= xrel){
-                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+                body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
             }
             else{
-                body_set_rotation(get_cue_stick, body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+                body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
             }
         }
     }
