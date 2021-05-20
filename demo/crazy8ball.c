@@ -71,7 +71,7 @@ body_t *get_cue_stick(scene_t *scene) {
 void player_motion_handler(double x, double y, double xrel, double yrel, void *aux) {
     // if on cue ball then move cue ball
     // if on force bar then change prepare to shoot stick
-    if (0 == 0){
+    if (0 == 1){
 
     }
     else{
