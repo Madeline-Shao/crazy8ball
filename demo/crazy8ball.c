@@ -47,6 +47,7 @@ const double SLIDER_X = 250;
 const double BUTTON_WIDTH = 60;
 const double BUTTON_HEIGHT = 30;
 const double BUTTON_Y = 230;
+const double DEFAULT_IMPULSE = 10;
 
 // // stick force buildup, animation, and ball collision
 // body_t *shoot_stick(vector_t initial_position, int direction, double width,
@@ -137,10 +138,25 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
 
 void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *button = get_object((scene_t *) aux, "BUTTON");
-    body_t *slider = get_object((scene_t *) aux, "SLIDER");
-    if (y >= body_get_centroid(slider).y - SLIDER_HEIGHT / 2 && y <= body_get_centroid(slider).y + SLIDER_HEIGHT / 2){
+    body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
+    if (y >= BUTTON_Y && y <= HIGH_RIGHT_CORNER.y - BUTTON_Y){
         body_set_centroid(button, (vector_t) {SLIDER_X, y});
+        
+        // body_set_centroid(cue_stick, (vector_t) {body_get_centroid(cue_stick).x + (-cos(body_get_angle(cue_stick)) * (y - yrel)), 
+        //     body_get_centroid(cue_stick).x + (-sin(body_get_angle(cue_stick)) * (y - yrel))});
     }
+}
+
+void shoot_handler(double y, void *aux){
+    body_t *button = get_object((scene_t *) aux, "BUTTON");
+    body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
+    body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
+    if (body_get_centroid(button).y != BUTTON_Y){
+        double impulse_factor = y - BUTTON_Y;
+        vector_t impulse = {impulse_factor * DEFAULT_IMPULSE * -cos(body_get_angle(cue_stick)), impulse_factor * DEFAULT_IMPULSE * -sin(body_get_angle(cue_stick))};
+        body_add_impulse(cue_ball, impulse);
+    }
+    body_set_centroid(button, (vector_t) {SLIDER_X, BUTTON_Y});
 }
 
 // // stick rotation
@@ -161,7 +177,8 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
         }
         if (type == MOUSE_UP) {
             // printf("mouse up - x: %f, y: %f\n", x, y);
-            sdl_on_motion(NULL, NULL);
+            sdl_on_motion((NULL), NULL);
+            shoot_handler(y, aux);
         }
     }
 }
