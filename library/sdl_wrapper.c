@@ -142,7 +142,7 @@ SDL_Renderer * sdl_init(vector_t min, vector_t max) {
         SDL_WINDOW_RESIZABLE
     );
     renderer = SDL_CreateRenderer(window, -1, 0);
-    return renderer;
+return renderer;
 }
 
 bool sdl_is_done(void) {
