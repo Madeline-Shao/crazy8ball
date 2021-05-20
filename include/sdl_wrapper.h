@@ -29,6 +29,12 @@ typedef enum {
     KEY_RELEASED
 } key_event_type_t;
 
+
+typedef enum {
+    MOUSE_DOWN,
+    MOUSE_UP
+} mouse_event_type_t;
+
 /**
  * A keypress handler.
  * When a key is pressed or released, the handler is passed its char value.
@@ -38,8 +44,23 @@ typedef enum {
  * @param key a character indicating which key was pressed
  * @param type the type of key event (KEY_PRESSED or KEY_RELEASED)
  * @param held_time if a press event, the time the key has been held in seconds
+ * @param aux auxiliary
  */
 typedef void (*key_handler_t)(char key, key_event_type_t type, double held_time, void * aux);
+
+/**
+ * A mouse press handler.
+ * When a mouse is pressed or released, the handler is passed its int value.
+ *
+ * @param key an int indicating which button was pressed
+ * @param type the type of key event (MOUSE_UP or MOUSE_DOWN)
+ * @param x the x coordinates of the mouse event
+ * @param y the y coordinates of the mouse event
+ * @param aux auxiliary
+ */
+typedef void (*mouse_handler_t)(int key, mouse_event_type_t type, double x, double y, void * aux);
+
+typedef void (*motion_handler_t)(double x, double y, double xrel, double yrel, void * aux);
 
 /**
  * Initializes the SDL window and renderer.
@@ -114,6 +135,10 @@ void sdl_render_scene(scene_t *scene);
  * @param aux_arg an auxilary for the key handler
  */
 void sdl_on_key(key_handler_t handler, void *aux_arg);
+
+void sdl_on_mouse(mouse_handler_t m_handler, void * aux_arg);
+
+void sdl_on_motion(motion_handler_t m_handler, void * aux_arg);
 
 /**
  * Gets the amount of time that has passed since the last time

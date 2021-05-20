@@ -16,7 +16,17 @@ const double MS_PER_S = 1e3;
 /**
  * Auxiliary element for on_key.
  */
-void * aux;
+void * key_aux;
+
+/**
+ * Auxiliary element for on_mouse.
+ */
+void * mouse_aux;
+
+/**
+ * Auxiliary element for on_motion.
+ */
+void * motion_aux;
 
 /**
  * The coordinate at the center of the screen.
@@ -38,6 +48,15 @@ SDL_Renderer *renderer;
  * The keypress handler, or NULL if none has been configured.
  */
 key_handler_t key_handler = NULL;
+/**
+ * The mouse press handler, or NULL if none has been configured.
+ */
+mouse_handler_t mouse_handler = NULL;
+
+/**
+ * The motion press handler, or NULL if none has been configured.
+ */
+motion_handler_t motion_handler = NULL;
 /**
  * SDL's timestamp when a key was last pressed or released.
  * Used to mesasure how long a key has been held.
@@ -149,8 +168,29 @@ bool sdl_is_done(void) {
                 key_event_type_t type =
                     event->type == SDL_KEYDOWN ? KEY_PRESSED : KEY_RELEASED;
                 double held_time = (timestamp - key_start_timestamp) / MS_PER_S;
-                key_handler(key, type, held_time, aux);
+                key_handler(key, type, held_time, key_aux);
                 break;
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+                if (mouse_handler == NULL) break;
+                Uint8 button = event->button.button;
+                // if (key == '\0') break;
+
+                // uint32_t timestamp = event->button.timestamp;
+                // if (!event->key.repeat) {
+                //     key_start_timestamp = timestamp;
+                // }
+                Sint32 x = event->button.x;
+                Sint32 y = event->button.y;
+                mouse_event_type_t m_type =
+                    event->type == SDL_MOUSEBUTTONDOWN ? MOUSE_DOWN : MOUSE_UP;
+                // double held_time = (timestamp - key_start_timestamp) / MS_PER_S;
+                mouse_handler(button, m_type, x, y, mouse_aux);
+                break;
+            case SDL_MOUSEMOTION:
+                if (motion_handler == NULL) break;
+                motion_handler(event->motion.x, event->motion.y, event->motion.xrel, event->motion.yrel, motion_aux);
+
         }
     }
     free(event);
@@ -236,9 +276,20 @@ void sdl_render_scene(scene_t *scene) {
     sdl_show();
 }
 
-void sdl_on_key(key_handler_t handler, void * aux_arg) {
-    aux = aux_arg;
-    key_handler = handler;
+void sdl_on_key(key_handler_t k_handler, void * aux_arg) {
+    key_aux = aux_arg;
+    key_handler = k_handler;
+
+}
+
+void sdl_on_mouse(mouse_handler_t m_handler, void * aux_arg) {
+    mouse_handler = m_handler;
+    mouse_aux = aux_arg;
+}
+
+void sdl_on_motion(motion_handler_t m_handler, void * aux_arg) {
+    motion_handler = m_handler;
+    motion_aux = aux_arg;
 }
 
 double time_since_last_tick(void) {

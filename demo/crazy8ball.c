@@ -46,10 +46,24 @@ const double G = 1;
 
 // }
 
-// // stick rotation
-// void player_key_handler(char key, key_event_type_t type, double held_time)
 
-// }
+void player_motion_handler(double x, double y, double xrel, double yrel, void *aux) {
+    printf("mouse motion - x: %f, y: %f, xrel: %f, yrel: %f\n", x, y, xrel, yrel);
+}
+
+// // stick rotation
+void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
+    if (key == SDL_BUTTON_LEFT) {
+        if (type == MOUSE_DOWN) {
+            printf("mouse down  - x: %f, y: %f\n", x, y);
+            sdl_on_motion((motion_handler_t)player_motion_handler, aux);
+        }
+        if (type == MOUSE_UP) {
+            printf("mouse up - x: %f, y: %f\n", x, y);
+            sdl_on_motion(NULL, NULL);
+        }
+    }
+}
 
 list_t *rect_init(double width, double height) {
     vector_t half_width  = {.x = width / 2, .y = 0.0},
@@ -282,6 +296,7 @@ int main(){
     SDL_Renderer *renderer = sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
     add_forces(scene);
+    sdl_on_mouse((mouse_handler_t)player_mouse_handler, scene);
 
     while (!sdl_is_done()){
         sdl_render_scene(scene);
