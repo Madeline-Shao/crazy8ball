@@ -144,6 +144,10 @@ vector_t body_get_origin(body_t *body){
     return body->origin;
 }
 
+void body_set_image(body_t *body, SDL_Surface *image) {
+    body->image = image;
+}
+
 void body_set_centroid(body_t *body, vector_t x){
     polygon_translate(body->shape, vec_subtract(x, body->centroid));
     body->centroid = x;
