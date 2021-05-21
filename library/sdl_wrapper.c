@@ -103,7 +103,7 @@ vector_t get_window_position(vector_t scene_pos, vector_t window_center) {
     vector_t pixel = {
         .x = round(window_center.x + pixel_center_offset.x),
         // Flip y axis since positive y is down on the screen
-        .y = round(window_center.y - pixel_center_offset.y)
+        .y = round(window_center.y + pixel_center_offset.y)
     };
     return pixel;
 }
@@ -256,27 +256,23 @@ void sdl_show(void) {
 void sdl_draw_sprite(body_t *body, scene_t *scene){
     if (body_get_image(body) != NULL) {
         SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, body_get_image(body));
-        SDL_Rect *boundary = malloc(sizeof(*boundary));
-        boundary->x = body_get_centroid(body).x - body_get_width(body) / 2;
-        boundary->y = body_get_centroid(body).y - body_get_height(body) / 2;
+        SDL_Rect *boundary = malloc(sizeof(SDL_Rect));
+        boundary->x = body_get_centroid(body).x - (body_get_width(body) / 2.0);
+        boundary->y = body_get_centroid(body).y - (body_get_height(body) / 2.0);
         boundary->w = body_get_width(body);
         boundary->h = body_get_height(body);
-
         if (!strcmp(body_get_info(body), "CUE_STICK")){
-            // printf("coordinates%d,%d\n", boundary->x, boundary->y);
             double x_diff = body_get_origin(body).x - boundary->x;
             double y_diff = body_get_origin(body).y - boundary->y;
             SDL_Point *origin = malloc(sizeof(SDL_Point));
             *origin = (SDL_Point){x_diff, y_diff};
-            SDL_RenderCopyEx(renderer, texture, NULL, boundary, -1 * body_get_angle(body) * 180 / M_PI, origin, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(renderer, texture, NULL, boundary, body_get_angle(body) * 180 / M_PI, origin, SDL_FLIP_NONE);
             // possible SDL_Point free needed
         }
         else{
             SDL_RenderCopy(renderer, texture, NULL, boundary);
         }
     }
-    if(!strcmp(body_get_info(body), "CUE_STICK") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "8_BALL") || !strcmp(body_get_info(body), "CUE_BALL"))
-        sdl_draw_polygon(body_get_shape(body), body_get_color(body));
 }
 
 void sdl_render_scene(scene_t *scene) {
