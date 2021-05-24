@@ -186,11 +186,11 @@ void shoot_handler(double y, void *aux){
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
     if (body_get_centroid(button).y != BUTTON_Y){
         body_set_centroid(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
-        body_set_rotation(cue_stick, 0);
         body_set_origin(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
         double impulse_factor = y - BUTTON_Y;
         vector_t impulse = {impulse_factor * DEFAULT_IMPULSE * -cos(body_get_angle(cue_stick)), impulse_factor * DEFAULT_IMPULSE * -sin(body_get_angle(cue_stick))};
         body_add_impulse(cue_ball, impulse);
+        body_set_rotation(cue_stick, 0);
     }
     body_set_centroid(button, (vector_t) {SLIDER_X, BUTTON_Y});
 }
@@ -461,12 +461,6 @@ int main(){
     while (!sdl_is_done()){
         sdl_render_scene(scene);
         scene_tick(scene, time_since_last_tick());
-        list_t * shape = body_get_shape(get_object(scene, "CUE_STICK"));
-        for (int i = 0; i < list_size(shape); i++) {
-          vector_t *point = (vector_t *)list_get(shape, i);
-          printf("x: %f, y: %f ", point->x, point->y);
-        }
-        printf("\ncentroid of cue stick %f %f\n", body_get_centroid(get_object(scene, "CUE_STICK")).x, body_get_centroid(get_object(scene, "CUE_STICK")).y);
     }
     scene_free(scene);
 }

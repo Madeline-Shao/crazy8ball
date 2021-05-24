@@ -262,13 +262,7 @@ void sdl_draw_sprite(body_t *body, scene_t *scene){
         boundary->w = body_get_width(body);
         boundary->h = body_get_height(body);
         if (!strcmp(body_get_info(body), "CUE_STICK")){
-            printf("image centroid %f %f\n", boundary->x + (boundary->w / 2.0), boundary->y + (boundary->h / 2.0));
-            double x_diff = body_get_origin(body).x - boundary->x;
-            double y_diff = body_get_origin(body).y - boundary->y;
-            SDL_Point *origin = malloc(sizeof(SDL_Point));
-            *origin = (SDL_Point){x_diff, y_diff};
-            SDL_RenderCopyEx(renderer, texture, NULL, boundary, body_get_angle(body) * 180 / M_PI, origin, SDL_FLIP_NONE);
-            // possible SDL_Point free needed
+            SDL_RenderCopyEx(renderer, texture, NULL, boundary, body_get_angle(body) * 180 / M_PI, NULL, SDL_FLIP_NONE);
         }
         else{
             SDL_RenderCopy(renderer, texture, NULL, boundary);
