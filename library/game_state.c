@@ -6,8 +6,6 @@
 #include "force_wrapper.h"
 #include "game_state.h"
 
-const size_t NUM_BALLS = 16;
-
 typedef struct game_state{
     size_t curr_player_turn;
     bool first_turn;
@@ -25,7 +23,7 @@ game_state_t *game_state_init(void){
     new_game_state->player_1_type = NULL;
     new_game_state->player_2_type = NULL;
     new_game_state->end_of_turn = false;
-    list_t *balls_sunk = list_init(NUM_BALLS, (free_func_t)(body_free));
+    list_t *balls_sunk = list_init(1, (free_func_t)(body_free));
     new_game_state->balls_sunk = balls_sunk;
 }
 

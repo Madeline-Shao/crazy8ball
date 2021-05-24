@@ -3,6 +3,7 @@
 
 #include "body.h"
 #include "list.h"
+#include "game_state.h"
 
 /**
  * A collection of bodies and force creators.
@@ -71,6 +72,10 @@ void scene_add_body(scene_t *scene, body_t *body);
  * @param index the index of the body in the scene (starting at 0)
  */
 void scene_remove_body(scene_t *scene, size_t index);
+
+game_state_t *scene_get_game_state(scene_t *scene);
+
+void scene_set_game_state(scene_t *scene, game_state_t *game_state);
 
 /**
  * @deprecated Use scene_add_bodies_force_creator() instead

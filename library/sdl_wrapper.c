@@ -268,9 +268,9 @@ void sdl_draw_sprite(body_t *body, scene_t *scene){
             SDL_RenderCopy(renderer, texture, NULL, boundary);
         }
     }
-    if (!strcmp(body_get_info(body), "CUE_STICK") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "8_BALL") || !strcmp(body_get_info(body), "CUE_BALL")){
+    /*if (!strcmp(body_get_info(body), "CUE_STICK") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "8_BALL") || !strcmp(body_get_info(body), "CUE_BALL")){
         sdl_draw_polygon(body_get_shape(body), body_get_color(body));
-    }
+    }*/
 
 }
 

@@ -90,9 +90,6 @@ body_t *get_cue_stick(scene_t *scene) {
 void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
     // if on cue ball then move cue ball
     // if on force bar then change prepare to shoot stick
-    vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball((scene_t *)aux)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
-    body_set_centroid(get_cue_stick((scene_t *)aux), cue_centroid);
-    body_set_origin(get_cue_stick((scene_t *)aux), body_get_centroid(get_cue_ball((scene_t *)aux)));
     // printf("origin: x: %f, y: %f\n", body_get_origin(get_cue_stick((scene_t *)aux)).x, body_get_origin(get_cue_stick((scene_t *)aux)).y);
     body_t *ball = get_cue_ball((scene_t *)aux);
     double angle = 2 * M_PI * (sqrt(pow(xrel, 2) + pow(yrel, 2))) / DRAG_DIST;
@@ -194,7 +191,7 @@ void shoot_handler(double y, void *aux){
         body_add_impulse(cue_ball, impulse);
         body_set_rotation(cue_stick, 0);
         // set end of turn to TRUE
-        game_state_set_end_of_turn(scene_get_game_state((scene_t *)aux)), true);
+        game_state_set_end_of_turn(scene_get_game_state((scene_t *)aux), true);
     }
     body_set_centroid(button, (vector_t) {SLIDER_X, BUTTON_Y});
 }
@@ -272,7 +269,7 @@ void gameplay_handler(scene_t *scene) {
                         }
                     }
                     else {
-                        set_game_state_player_2_type(game_state, body_get_info(ball));
+                        game_state_set_player_2_type(game_state, body_get_info(ball));
                         if (!strcmp(body_get_info(ball), "SOLID_BALL")) {
                             game_state_set_player_1_type(game_state, "STRIPED_BALL");
                         }
@@ -291,7 +288,7 @@ void gameplay_handler(scene_t *scene) {
         switch_turn = true;
     }
     if (switch_turn) {
-        game_state_set_curr_player_turn(game_state, 3 - get_game_state_curr_player_turn(game_state));
+        game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
     }
 
     while (list_size(balls_sunk) != 0) {
@@ -311,6 +308,9 @@ void gameplay_handler(scene_t *scene) {
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
     if (key == SDL_BUTTON_LEFT) {
         if (type == MOUSE_DOWN) {
+            if (game_state_get_end_of_turn(scene_get_game_state((scene_t *) aux))) {
+                gameplay_handler((scene_t *)aux);
+            }
             // printf("mouse down  - x: %f, y: %f\n", x, y);
             body_t *button = get_object((scene_t *) aux, "BUTTON");
             if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
@@ -320,6 +320,9 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                     sdl_on_motion((motion_handler_t)slider_handler, aux);
             }
             else{
+                vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball((scene_t *)aux)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+                body_set_centroid(get_cue_stick((scene_t *)aux), cue_centroid);
+                body_set_origin(get_cue_stick((scene_t *)aux), body_get_centroid(get_cue_ball((scene_t *)aux)));
                 sdl_on_motion((motion_handler_t)rotation_handler, aux);
             }
         }
@@ -536,8 +539,9 @@ void game_setup(scene_t *scene){
     add_slider(scene);
 }
 
-void hole_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
-    body_remove(ball);
+void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
+    list_add(game_state_get_balls_sunk(scene_get_game_state((scene_t *) aux)), ball);
+    body_set_image(ball, NULL);
 }
 
 void add_forces(scene_t *scene){
@@ -551,7 +555,7 @@ void add_forces(scene_t *scene){
                     create_physics_collision(scene, BALL_ELASTICITY, body1, body2);
                 }
                 else if(!strcmp(body_get_info(body2), "HOLE")){
-                    create_collision(scene, body1, body2, (collision_handler_t) hole_destroy, NULL, NULL);
+                    create_collision(scene, body1, body2, (collision_handler_t) ball_destroy, NULL, NULL);
                 }
                 if(!strcmp(body_get_info(body1), "CUE_BALL") && !strcmp(body_get_info(body2), "CUE_STICK")){
                     create_physics_collision(scene, BALL_ELASTICITY, body1, body2);
@@ -564,7 +568,7 @@ void add_forces(scene_t *scene){
 int main(){
     scene_t *scene = scene_init();
     game_state_t *game_state = game_state_init();
-    scene_set_game_state(game_state);
+    scene_set_game_state(scene, game_state);
     game_setup(scene);
     SDL_Renderer *renderer = sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
