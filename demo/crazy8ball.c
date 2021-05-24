@@ -220,7 +220,7 @@ bool self_balls_done(scene_t *scene) {
 void gameplay_handler(scene_t *scene) {
     game_state_t *game_state = scene_get_game_state(scene);
     if (game_state_get_player_1_type(game_state) != NULL && game_state_get_player_2_type(game_state) != NULL) {
-        printf("current turn: %d 1_type: %s, 2_type: %s\n", game_state_get_curr_player_turn(game_state), game_state_get_player_1_type(game_state), game_state_get_player_2_type(game_state));
+        printf("current turn: %d, 1_type: %s, 2_type: %s\n", game_state_get_curr_player_turn(game_state), game_state_get_player_1_type(game_state), game_state_get_player_2_type(game_state));
     }
     else {
         printf("current turn: %d\n", game_state_get_curr_player_turn(game_state));
@@ -254,29 +254,41 @@ void gameplay_handler(scene_t *scene) {
             self_balls_sunk = true;
         }
     }
+
+    // setting the type for each player
     if (!game_state_get_first_turn(game_state) && game_state_get_player_1_type(game_state) == NULL) {
+        // printf("never gonna give you up");
         if ((cue_ball_sunk && list_size(balls_sunk) > 1) || (!cue_ball_sunk && list_size(balls_sunk) > 0)) {
+            // printf("never gonna give let you down");
             for (int i = 0; i < list_size(balls_sunk); i++) {
                 body_t *ball = list_get(balls_sunk, i);
-                if (strcmp(body_get_info(ball), "CUE_BALL")) {
+                if (strcmp((char *) body_get_info(ball), "CUE_BALL")) {
+                    // printf("never gonna give run around");
                     if (game_state_get_curr_player_turn(game_state) == 1) {
-                        game_state_set_player_1_type(game_state, body_get_info(ball));
-                        if (!strcmp(body_get_info(ball), "SOLID_BALL")) {
+                       // printf("and desert you");
+                        game_state_set_player_1_type(game_state, (char *) body_get_info(ball));
+                        if (!strcmp((char *) body_get_info(ball), "SOLID_BALL")) {
+                           // printf("never gonna make you cry");
                             game_state_set_player_2_type(game_state, "STRIPED_BALL");
                         }
                         else {
+                            // printf("never gonna say goodbye");
                             game_state_set_player_2_type(game_state, "SOLID_BALL");
                         }
                     }
                     else {
-                        game_state_set_player_2_type(game_state, body_get_info(ball));
-                        if (!strcmp(body_get_info(ball), "SOLID_BALL")) {
+                        game_state_set_player_2_type(game_state, (char *) body_get_info(ball));
+                        if (!strcmp((char *) body_get_info(ball), "SOLID_BALL")) {
+                            // printf("never gonna tell a lie");
                             game_state_set_player_1_type(game_state, "STRIPED_BALL");
                         }
                         else {
+                           // printf("and hurt you");
                             game_state_set_player_1_type(game_state, "SOLID_BALL");
                         }
                     }
+                    self_balls_sunk = true;
+                    break;
                 }
             }
         }
@@ -294,7 +306,7 @@ void gameplay_handler(scene_t *scene) {
     while (list_size(balls_sunk) != 0) {
         body_t *ball = list_remove(balls_sunk, 0);
         // if not a cue ball
-        if (strcmp(body_get_info(ball), "CUE_BALL")) {
+        if ((char *) strcmp(body_get_info(ball), "CUE_BALL")) {
             body_remove(ball);
         }
     }
@@ -308,22 +320,18 @@ void gameplay_handler(scene_t *scene) {
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
     if (key == SDL_BUTTON_LEFT) {
         if (type == MOUSE_DOWN) {
-            if (game_state_get_end_of_turn(scene_get_game_state((scene_t *) aux)) && is_balls_stopped((scene_t *) aux)) {    
-                gameplay_handler((scene_t *)aux);
-            }
             // printf("mouse down  - x: %f, y: %f\n", x, y);
-            body_t *button = get_object((scene_t *) aux, "BUTTON");
-            if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
-                && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
-                && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
-                && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
-                    sdl_on_motion((motion_handler_t)slider_handler, aux);
-            }
-            else{
-                vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball((scene_t *)aux)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
-                body_set_centroid(get_cue_stick((scene_t *)aux), cue_centroid);
-                body_set_origin(get_cue_stick((scene_t *)aux), body_get_centroid(get_cue_ball((scene_t *)aux)));
-                sdl_on_motion((motion_handler_t)rotation_handler, aux);
+            if(is_balls_stopped((scene_t *) aux)){
+                body_t *button = get_object((scene_t *) aux, "BUTTON");
+                if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
+                    && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
+                    && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
+                    && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
+                        sdl_on_motion((motion_handler_t)slider_handler, aux);
+                }
+                else{
+                    sdl_on_motion((motion_handler_t)rotation_handler, aux);
+                }
             }
         }
         if (type == MOUSE_UP) {
@@ -539,6 +547,7 @@ void game_setup(scene_t *scene){
     add_slider(scene);
 }
 
+// SHE DID INDEED SAY THAT
 void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
     list_add(game_state_get_balls_sunk(scene_get_game_state((scene_t *) aux)), ball);
     body_set_image(ball, NULL);
@@ -555,7 +564,7 @@ void add_forces(scene_t *scene){
                     create_physics_collision(scene, BALL_ELASTICITY, body1, body2);
                 }
                 else if(!strcmp(body_get_info(body2), "HOLE")){
-                    create_collision(scene, body1, body2, (collision_handler_t) ball_destroy, NULL, NULL);
+                    create_collision(scene, body1, body2, (collision_handler_t) ball_destroy, scene, NULL);
                 }
                 if(!strcmp(body_get_info(body1), "CUE_BALL") && !strcmp(body_get_info(body2), "CUE_STICK")){
                     create_physics_collision(scene, BALL_ELASTICITY, body1, body2);
@@ -592,6 +601,12 @@ int main(){
         sdl_render_scene(scene);
         scene_tick(scene, time_since_last_tick());
         stop_balls(scene);
+        if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene)){
+            vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball(scene)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+            body_set_centroid(get_cue_stick(scene), cue_centroid);
+            body_set_origin(get_cue_stick(scene), body_get_centroid(get_cue_ball(scene)));    
+            gameplay_handler(scene);
+        }
     }
     scene_free(scene);
 }
