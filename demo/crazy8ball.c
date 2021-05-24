@@ -99,9 +99,17 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
         // counterclockwise
         if (-1 * yrel >= xrel){
             body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+            double angle1 = body_get_angle(get_cue_stick((scene_t *)aux)) - angle;
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            new_centroid = vec_add(new_centroid, body_get_centroid(get_cue_ball((scene_t *)aux)));
+            body_set_centroid(get_cue_stick((scene_t *)aux), new_centroid);
         }
         else{
             body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+            double angle1 = body_get_angle(get_cue_stick((scene_t *)aux)) - angle;
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            new_centroid = vec_add(new_centroid, body_get_centroid(get_cue_ball((scene_t *)aux)));
+            body_set_centroid(get_cue_stick((scene_t *)aux), new_centroid);
         }
     }
     // second quadrant
@@ -109,9 +117,17 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
         // counterclockwise
         if (yrel >= xrel){
             body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+            double angle1 = body_get_angle(get_cue_stick((scene_t *)aux)) - angle;
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            new_centroid = vec_add(new_centroid, body_get_centroid(get_cue_ball((scene_t *)aux)));
+            body_set_centroid(get_cue_stick((scene_t *)aux), new_centroid);
         }
         else{
             body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+            double angle1 = body_get_angle(get_cue_stick((scene_t *)aux)) - angle;
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            new_centroid = vec_add(new_centroid, body_get_centroid(get_cue_ball((scene_t *)aux)));
+            body_set_centroid(get_cue_stick((scene_t *)aux), new_centroid);
         }
     }
     // third quadrant
@@ -119,9 +135,17 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
         // counterclockwise
         if (-1 * yrel <= xrel){
             body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+            double angle1 = body_get_angle(get_cue_stick((scene_t *)aux)) - angle;
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            new_centroid = vec_add(new_centroid, body_get_centroid(get_cue_ball((scene_t *)aux)));
+            body_set_centroid(get_cue_stick((scene_t *)aux), new_centroid);
         }
         else{
             body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+            double angle1 = body_get_angle(get_cue_stick((scene_t *)aux)) - angle;
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            new_centroid = vec_add(new_centroid, body_get_centroid(get_cue_ball((scene_t *)aux)));
+            body_set_centroid(get_cue_stick((scene_t *)aux), new_centroid);
         }
     }
     // fourth quandrant
@@ -129,9 +153,17 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
         // counterclockwise
         if (yrel <= xrel){
             body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) - angle);
+            double angle1 = body_get_angle(get_cue_stick((scene_t *)aux)) - angle;
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            new_centroid = vec_add(new_centroid, body_get_centroid(get_cue_ball((scene_t *)aux)));
+            body_set_centroid(get_cue_stick((scene_t *)aux), new_centroid);
         }
         else{
             body_set_rotation(get_cue_stick((scene_t *)aux), body_get_angle(get_cue_stick((scene_t *)aux)) + angle);
+            double angle1 = body_get_angle(get_cue_stick((scene_t *)aux)) - angle;
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            new_centroid = vec_add(new_centroid, body_get_centroid(get_cue_ball((scene_t *)aux)));
+            body_set_centroid(get_cue_stick((scene_t *)aux), new_centroid);
         }
     }
     // printf("mouse motion - x: %f, y: %f, xrel: %f, yrel: %f\n", x, y, xrel, yrel);
@@ -429,7 +461,12 @@ int main(){
     while (!sdl_is_done()){
         sdl_render_scene(scene);
         scene_tick(scene, time_since_last_tick());
-        printf("centroid of cue stick %f %f\n", body_get_centroid(get_object(scene, "CUE_STICK")).x, body_get_centroid(get_object(scene, "CUE_STICK")).y);
+        list_t * shape = body_get_shape(get_object(scene, "CUE_STICK"));
+        for (int i = 0; i < list_size(shape); i++) {
+          vector_t *point = (vector_t *)list_get(shape, i);
+          printf("x: %f, y: %f ", point->x, point->y);
+        }
+        printf("\ncentroid of cue stick %f %f\n", body_get_centroid(get_object(scene, "CUE_STICK")).x, body_get_centroid(get_object(scene, "CUE_STICK")).y);
     }
     scene_free(scene);
 }

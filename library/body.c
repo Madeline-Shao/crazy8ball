@@ -170,6 +170,7 @@ void body_set_velocity(body_t *body, vector_t v){
 void body_set_rotation(body_t *body, double angle){
     polygon_rotate(body->shape, angle - body->angle, body->origin);
     body->angle = angle;
+    body->centroid = polygon_centroid(body->shape);
 }
 
 void body_set_origin(body_t *body, vector_t origin){
