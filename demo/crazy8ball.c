@@ -48,7 +48,7 @@ const double BUTTON_WIDTH = 60;
 const double BUTTON_HEIGHT = 30;
 const double BUTTON_Y = 230;
 const double DEFAULT_IMPULSE = 10;
-
+const double CUE_STICK_DEFAULT_Y = 30;
 
 // // stick force buildup, animation, and ball collision
 // body_t *shoot_stick(vector_t initial_position, int direction, double width,
@@ -153,6 +153,9 @@ void shoot_handler(double y, void *aux){
     body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
     if (body_get_centroid(button).y != BUTTON_Y){
+        body_set_centroid(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
+        body_set_rotation(cue_stick, 0);
+        body_set_origin(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
         double impulse_factor = y - BUTTON_Y;
         vector_t impulse = {impulse_factor * DEFAULT_IMPULSE * -cos(body_get_angle(cue_stick)), impulse_factor * DEFAULT_IMPULSE * -sin(body_get_angle(cue_stick))};
         body_add_impulse(cue_ball, impulse);
@@ -218,7 +221,7 @@ list_t *circle_init(double radius){
 void add_stick(scene_t * scene) {
     list_t *stick_shape = rect_init(CUE_STICK_WIDTH, CUE_STICK_HEIGHT);
     SDL_Surface *ball_image = IMG_Load("images/cue_stick.png");
-    body_t *cue_stick = body_init_with_info(stick_shape, CUE_STICK_MASS, WHITE_COLOR, ball_image, CUE_STICK_WIDTH, CUE_STICK_HEIGHT, "CUE_STICK", NULL);
+    body_t *cue_stick = body_init_with_info(stick_shape, CUE_STICK_MASS, (rgb_color_t) {1, 0, 0}, ball_image, CUE_STICK_WIDTH, CUE_STICK_HEIGHT, "CUE_STICK", NULL);
     vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball(scene)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
     body_set_centroid(cue_stick, cue_centroid);
     body_set_origin(cue_stick, body_get_centroid(get_cue_ball(scene)));
@@ -426,6 +429,7 @@ int main(){
     while (!sdl_is_done()){
         sdl_render_scene(scene);
         scene_tick(scene, time_since_last_tick());
+        printf("centroid of cue stick %f %f\n", body_get_centroid(get_object(scene, "CUE_STICK")).x, body_get_centroid(get_object(scene, "CUE_STICK")).y);
     }
     scene_free(scene);
 }
