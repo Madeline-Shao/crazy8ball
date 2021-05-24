@@ -5,6 +5,7 @@
 #include "list.h"
 #include "scene.h"
 #include "force_wrapper.h"
+#include "game_state.h"
 
 const double INITIAL_SCENE_SIZE = 100;
 const double INITIAL_FORCE_SIZE = 100;
@@ -12,6 +13,7 @@ const double INITIAL_FORCE_SIZE = 100;
 typedef struct scene{
     list_t *body_list;
     list_t *force_list;
+    game_state_t *game_state;
 } scene_t;
 
 scene_t *scene_init(void){
@@ -45,6 +47,14 @@ void scene_add_body(scene_t *scene, body_t *body){
 
 void scene_remove_body(scene_t *scene, size_t index){
     body_remove(scene_get_body(scene, index));
+}
+
+game_state_t *scene_get_game_state(scene_t *scene){
+    return scene->game_state;
+}
+
+void scene_set_game_state(scene_t *scene, game_state_t *game_state){
+    scene->game_state = game_state;
 }
 
 // deprecated
