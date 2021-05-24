@@ -142,8 +142,8 @@ void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
     if (y >= BUTTON_Y && y <= HIGH_RIGHT_CORNER.y - BUTTON_Y){
         body_set_centroid(button, (vector_t) {SLIDER_X, y});
-        
-        // body_set_centroid(cue_stick, (vector_t) {body_get_centroid(cue_stick).x + (-cos(body_get_angle(cue_stick)) * (y - yrel)), 
+
+        // body_set_centroid(cue_stick, (vector_t) {body_get_centroid(cue_stick).x + (-cos(body_get_angle(cue_stick)) * (y - yrel)),
         //     body_get_centroid(cue_stick).x + (-sin(body_get_angle(cue_stick)) * (y - yrel))});
     }
 }

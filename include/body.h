@@ -116,7 +116,10 @@ double body_get_height(body_t *body);
 double body_get_width(body_t *body);
 
 vector_t body_get_origin(body_t *body);
+
 double body_get_angle(body_t *body);
+
+void body_set_image(body_t *body, SDL_Surface *image);
 
 /**
  * Translates a body to a new position.
