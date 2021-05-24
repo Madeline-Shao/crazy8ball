@@ -200,7 +200,7 @@ bool is_balls_stopped(scene_t *scene) {
     for (int i = 0; i < scene_bodies(scene); i++) {
         body_t *body = scene_get_body(scene, i);
         vector_t velocity = body_get_velocity(body);
-        if (velocity.x > VELOCITY_THRESHOLD.x || velocity.y > VELOCITY_THRESHOLD.y){
+        if (!vec_equal(velocity, VEC_ZERO)){
             return false;
         }
     }
@@ -304,11 +304,11 @@ void gameplay_handler(scene_t *scene) {
     game_state_set_first_turn(game_state, false);
 }
 
-// // stick rotation
+// stick rotation
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
     if (key == SDL_BUTTON_LEFT) {
         if (type == MOUSE_DOWN) {
-            if (game_state_get_end_of_turn(scene_get_game_state((scene_t *) aux))) {
+            if (game_state_get_end_of_turn(scene_get_game_state((scene_t *) aux)) && is_balls_stopped((scene_t *) aux)) {    
                 gameplay_handler((scene_t *)aux);
             }
             // printf("mouse down  - x: %f, y: %f\n", x, y);
@@ -565,6 +565,19 @@ void add_forces(scene_t *scene){
     }
 }
 
+void stop_balls(scene_t *scene){
+    for (int i = 0; i < scene_bodies(scene); i++) {
+        body_t *body = scene_get_body(scene, i);
+        vector_t velocity = body_get_velocity(body);
+        if (fabs(velocity.x) < VELOCITY_THRESHOLD.x && fabs(velocity.y) < VELOCITY_THRESHOLD.y){
+            body_set_velocity(body, (vector_t) {0, 0});
+        }
+        /*if (!strcmp(body_get_info(body), "CUE_BALL")){   
+            printf("%f %f\n", velocity.x, velocity.y);
+        }*/
+    }
+}
+
 int main(){
     scene_t *scene = scene_init();
     game_state_t *game_state = game_state_init();
@@ -578,6 +591,7 @@ int main(){
     while (!sdl_is_done()){
         sdl_render_scene(scene);
         scene_tick(scene, time_since_last_tick());
+        stop_balls(scene);
     }
     scene_free(scene);
 }

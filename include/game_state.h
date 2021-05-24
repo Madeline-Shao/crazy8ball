@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include "body.h"
 #include "list.h"
-#include "force_wrapper.h"
 
 typedef struct game_state game_state_t;
 
