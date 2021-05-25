@@ -51,6 +51,7 @@ const double BUTTON_Y = 230;
 const double DEFAULT_IMPULSE = 10;
 const double CUE_STICK_DEFAULT_Y = 30;
 const vector_t VELOCITY_THRESHOLD = {0.5, 0.5};
+const double TINY_CONSTANT = 0.8;
 
 body_t *get_object(scene_t *scene, char *name){
     for (int i = 0; i < scene_bodies(scene); i++) {
@@ -170,10 +171,24 @@ void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
     }
 }
 
+void up_down_handler(double x, double y, double xrel, double yrel, void *aux) {
+    body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
+    body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
+    vector_t table_centroid = body_get_centroid(get_object((scene_t *) aux, "POOL_TABLE"));
+    if (y < table_centroid.y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS && y > table_centroid.y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS){
+        scene_t *scene = (scene_t *)aux;
+        body_set_centroid(cue_ball, (vector_t) {body_get_centroid(cue_ball).x, y});
+        vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+        body_set_centroid(cue_stick, cue_centroid);
+        body_set_origin(cue_stick, body_get_centroid(cue_ball));
+    }
+}
+
 void cue_ball_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
     vector_t table_centroid = body_get_centroid(get_object((scene_t *) aux, "POOL_TABLE"));
+    // making sure not dragging over another ball
     if (x < table_centroid.x + TABLE_WIDTH / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS && x > table_centroid.x - TABLE_WIDTH / 2 + TABLE_WALL_THICKNESS  + WALL_THICKNESS / 2 + BALL_RADIUS
         && y < table_centroid.y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS && y > table_centroid.y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS){
         scene_t *scene = (scene_t *)aux;
@@ -352,7 +367,10 @@ void gameplay_handler(scene_t *scene) {
 
     // set to true later in shoot handler
     game_state_set_end_of_turn(game_state, false);
-    game_state_set_first_turn(game_state, false);
+    if (game_state_get_first_turn(game_state)){
+        body_remove(get_object(scene, "INITIAL_LINE"));
+        game_state_set_first_turn(game_state, false);
+    }
     if (game_state_get_player_1_type(game_state) != NULL && game_state_get_player_2_type(game_state) != NULL) {
         printf("current turn: %d, 1_type: %s, 2_type: %s\n", game_state_get_curr_player_turn(game_state), game_state_get_player_1_type(game_state), game_state_get_player_2_type(game_state));
     }
@@ -376,12 +394,18 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                     && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
                     sdl_on_motion((motion_handler_t)slider_handler, aux);
                 }
+                // click on cue ball
                 else if (x >= body_get_centroid(cue_ball).x - BALL_RADIUS
                     && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
                     && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
                     && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
                         //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
-                    sdl_on_motion((motion_handler_t)cue_ball_handler, aux);
+                    if (game_state_get_first_turn(scene_get_game_state((scene_t *)aux))){
+                        sdl_on_motion((motion_handler_t)up_down_handler, aux);
+                    }
+                    else {
+                        sdl_on_motion((motion_handler_t)cue_ball_handler, aux);
+                    }
                 }
                 else{
                     sdl_on_motion((motion_handler_t)rotation_handler, aux);
@@ -461,7 +485,8 @@ void add_slider(scene_t *scene){
 
 void add_balls(scene_t *scene) {
     list_t *balls = list_init(NUM_BALLS, (free_func_t) body_free);
-    vector_t initial_position = {HIGH_RIGHT_CORNER.x * 3 / 7 - BALL_RADIUS * 9, HIGH_RIGHT_CORNER.y / 2 - BALL_RADIUS * 4}; //magic numbers
+     //magic numbers!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    vector_t initial_position = {HIGH_RIGHT_CORNER.x * 3 / 7 - BALL_RADIUS * 9, HIGH_RIGHT_CORNER.y / 2 - BALL_RADIUS * 4};
     for(int i = 1; i <= 16; i++){
         char name[20];
         snprintf(name, 20, "images/ball_%d.png", i);
@@ -592,8 +617,18 @@ void add_holes(scene_t *scene){
     scene_add_body(scene, hole_top6);
 }
 
+void add_initial_line(scene_t *scene){
+    double wall_height = TABLE_HEIGHT - 2 * WALL_TABLE_WIDTH_DIFF;
+    list_t *line_list = rect_init(TINY_CONSTANT, 2 * wall_height - 4 * WALL_THICKNESS);
+    body_t *line = body_init_with_info(line_list, INFINITY, WHITE_COLOR, NULL, 0, 0, "INITIAL_LINE", NULL);
+    vector_t line_centroid = (vector_t) {HIGH_RIGHT_CORNER.x * 4 / 7, HIGH_RIGHT_CORNER.y / 2};
+    body_set_centroid(line, line_centroid);
+    scene_add_body(scene, line);
+}
+
 void game_setup(scene_t *scene){
     add_table(scene);
+    add_initial_line(scene);
     add_balls(scene);
     add_stick(scene);
     add_walls(scene);
