@@ -52,6 +52,7 @@ const double DEFAULT_IMPULSE = 10;
 const double CUE_STICK_DEFAULT_Y = 30;
 const vector_t VELOCITY_THRESHOLD = {0.5, 0.5};
 const double TINY_CONSTANT = 0.8;
+const double PULL_FACTOR_ADJUSTMENT_CONSTANT = 0.1;
 
 body_t *get_object(scene_t *scene, char *name){
     for (int i = 0; i < scene_bodies(scene); i++) {
@@ -166,8 +167,15 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
 
 void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *button = get_object((scene_t *) aux, "BUTTON");
-    if (y >= BUTTON_Y && y <= HIGH_RIGHT_CORNER.y - BUTTON_Y){
+    body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
+    body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
+    double angle = body_get_angle(cue_stick);
+    double y_total = HIGH_RIGHT_CORNER.y - BUTTON_Y;
+    if (y >= BUTTON_Y && y <= y_total){
         body_set_centroid(button, (vector_t) {SLIDER_X, y});
+        vector_t curr_centroid = body_get_centroid(cue_ball);
+        body_set_centroid(cue_stick, (vector_t) {curr_centroid.x + (y / y_total * PULL_FACTOR_ADJUSTMENT_CONSTANT + (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2)) * cos(angle), 
+                                                 curr_centroid.y + (y / y_total * PULL_FACTOR_ADJUSTMENT_CONSTANT + (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2)) * sin(angle)});
     }
 }
 
@@ -213,7 +221,10 @@ void shoot_handler(double y, void *aux){
     body_t *button = get_object((scene_t *) aux, "BUTTON");
     body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
-    if (body_get_centroid(button).y != BUTTON_Y){
+    if (body_get_centroid(button).y != BUTTON_Y){   
+        if (game_state_get_first_turn((scene_t *) aux)){
+            body_remove(get_object((scene_t *) aux, "INITIAL_LINE"));
+        }
         body_set_centroid(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
         body_set_origin(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
         double impulse_factor = y - BUTTON_Y;
@@ -368,7 +379,6 @@ void gameplay_handler(scene_t *scene) {
     // set to true later in shoot handler
     game_state_set_end_of_turn(game_state, false);
     if (game_state_get_first_turn(game_state)){
-        body_remove(get_object(scene, "INITIAL_LINE"));
         game_state_set_first_turn(game_state, false);
     }
     if (game_state_get_player_1_type(game_state) != NULL && game_state_get_player_2_type(game_state) != NULL) {
