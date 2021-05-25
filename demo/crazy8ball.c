@@ -28,6 +28,7 @@ const double CUE_STICK_WIDTH = 400;
 const double CUE_STICK_HEIGHT = 10;
 const double CUE_STICK_MASS = INFINITY;
 const rgb_color_t WHITE_COLOR = {1, 1, 1};
+const SDL_Color BLACK_COLOR = {0, 0, 0};
 const double TABLE_WIDTH = 800;
 const double TABLE_HEIGHT = 480;
 const double WALL_THICKNESS = 10;
@@ -271,7 +272,13 @@ void clear_scene(scene_t *scene) {
     }
 }
 
-void gameplay_handler(scene_t *scene) {
+void change_text(scene_t *scene, char *info, char *text, TTF_Font *font){
+    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100);
+    SDL_Surface *new_text = TTF_RenderText_Solid(font, text, BLACK_COLOR);
+    body_set_image(get_object(scene, info), new_text);
+}
+
+void gameplay_handler(scene_t *scene, TTF_Font *font) {
     game_state_t *game_state = scene_get_game_state(scene);
 
     bool switch_turn = false;
@@ -355,6 +362,15 @@ void gameplay_handler(scene_t *scene) {
                         }
                     }
                     self_balls_sunk = true;
+                    
+                    char type[45];
+                    if (!strcmp(game_state_get_player_1_type(game_state), "SOLID_BALL")){
+                        snprintf(type, 45, "Player One: %s | Player Two: %s", "SOLID", "STRIPES");
+                    }
+                    else {
+                        snprintf(type, 45, "Player One: %s | Player Two: %s", "STRIPES", "SOLID");
+                    }
+                    change_text(scene, "TYPE_TEXT", type, font);
                     break;
                 }
             }
@@ -368,16 +384,11 @@ void gameplay_handler(scene_t *scene) {
     }
     if (switch_turn) {
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
-        TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100); 
-        SDL_Color black = {0, 0, 0};
-        body_t *turn_text = get_object(scene, "TURN_TEXT");
         if(game_state_get_curr_player_turn(game_state) == 1){
-            SDL_Surface *new_text = TTF_RenderText_Solid(inspace_font, "Player One", black);
-            body_set_image(turn_text, new_text);
+            change_text(scene, "TURN_TEXT", "Player One", font);
         }
         else{
-            SDL_Surface *new_text = TTF_RenderText_Solid(inspace_font, "Player Two", black);
-            body_set_image(turn_text, new_text);
+            change_text(scene, "TURN_TEXT", "Player Two", font);
         }
     }
 
@@ -649,19 +660,26 @@ void add_initial_line(scene_t *scene){
     scene_add_body(scene, line);
 }
 
-void add_text(scene_t *scene){
-    TTF_Init();
+void add_text(scene_t *scene, TTF_Font *font){
     list_t *shape = list_init(0, free);
-    TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100); 
-    SDL_Color black = {0, 0, 0};
-    SDL_Surface *turn = TTF_RenderText_Solid(inspace_font, "Player One", black);
+    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100); 
+    SDL_Surface *turn = TTF_RenderText_Solid(font, "Player One", BLACK_COLOR);
     body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0}, turn, 300, 100, "TURN_TEXT", NULL);
     vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 100};
     body_set_centroid(turn_text, turn_text_centroid);
     scene_add_body(scene, turn_text);
+
+    list_t *shape1 = list_init(0, free);
+    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100); 
+    SDL_Color black = {0, 0, 0};
+    SDL_Surface *type = TTF_RenderText_Solid(font, "", black);
+    body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0}, type, 700, 100, "TYPE_TEXT", NULL);
+    vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 100};
+    body_set_centroid(type_text, type_text_centroid);
+    scene_add_body(scene, type_text);
 }
 
-void game_setup(scene_t *scene){
+void game_setup(scene_t *scene, TTF_Font *font){
     add_table(scene);
     add_initial_line(scene);
     add_balls(scene);
@@ -669,7 +687,7 @@ void game_setup(scene_t *scene){
     add_walls(scene);
     add_holes(scene);
     add_slider(scene);
-    add_text(scene);
+    add_text(scene, font);
 }
 
 // SHE DID INDEED SAY THAT
@@ -717,7 +735,11 @@ int main(){
     scene_t *scene = scene_init();
     game_state_t *game_state = game_state_init();
     scene_set_game_state(scene, game_state);
-    game_setup(scene);
+
+    TTF_Init();
+    TTF_Font* hemihead_font = TTF_OpenFont("fonts/HEMIHEAD.TTF", 100);
+    game_setup(scene, hemihead_font);
+
     SDL_Renderer *renderer = sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
     add_forces(scene);
@@ -731,7 +753,7 @@ int main(){
             vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball(scene)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
             body_set_centroid(get_cue_stick(scene), cue_centroid);
             body_set_origin(get_cue_stick(scene), body_get_centroid(get_cue_ball(scene)));
-            gameplay_handler(scene);
+            gameplay_handler(scene, hemihead_font);
         }
         if (game_state_get_winner(scene_get_game_state(scene)) != NULL) {
             // printf("winner: %s: \n", game_state_get_winner(scene_get_game_state(scene)));
