@@ -15,6 +15,7 @@
 #include "force_wrapper.h"
 #include <string.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 const vector_t LOW_LEFT_CORNER = {0, 0};
 const vector_t HIGH_RIGHT_CORNER = {1500, 900};
@@ -49,10 +50,10 @@ const double BUTTON_WIDTH = 60;
 const double BUTTON_HEIGHT = 30;
 const double BUTTON_Y = 230;
 const double DEFAULT_IMPULSE = 10;
-const double CUE_STICK_DEFAULT_Y = 30;
+const double CUE_STICK_DEFAULT_Y = 177;
 const vector_t VELOCITY_THRESHOLD = {0.5, 0.5};
 const double TINY_CONSTANT = 0.8;
-const double PULL_FACTOR_ADJUSTMENT_CONSTANT = 0.1;
+const double PULL_FACTOR_ADJUSTMENT_CONSTANT = 47;
 
 body_t *get_object(scene_t *scene, char *name){
     for (int i = 0; i < scene_bodies(scene); i++) {
@@ -174,8 +175,9 @@ void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
     if (y >= BUTTON_Y && y <= y_total){
         body_set_centroid(button, (vector_t) {SLIDER_X, y});
         vector_t curr_centroid = body_get_centroid(cue_ball);
-        body_set_centroid(cue_stick, (vector_t) {curr_centroid.x + (y / y_total * PULL_FACTOR_ADJUSTMENT_CONSTANT + (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2)) * cos(angle), 
-                                                 curr_centroid.y + (y / y_total * PULL_FACTOR_ADJUSTMENT_CONSTANT + (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2)) * sin(angle)});
+        double adjustment = (y - BUTTON_Y) / y_total * PULL_FACTOR_ADJUSTMENT_CONSTANT + (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2);
+        body_set_centroid(cue_stick, (vector_t) {curr_centroid.x + adjustment * cos(angle), 
+                                                 curr_centroid.y + adjustment * sin(angle)});
     }
 }
 
@@ -222,7 +224,7 @@ void shoot_handler(double y, void *aux){
     body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
     if (body_get_centroid(button).y != BUTTON_Y){   
-        if (game_state_get_first_turn((scene_t *) aux)){
+        if (game_state_get_first_turn(scene_get_game_state((scene_t *) aux))){
             body_remove(get_object((scene_t *) aux, "INITIAL_LINE"));
         }
         body_set_centroid(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
@@ -366,6 +368,17 @@ void gameplay_handler(scene_t *scene) {
     }
     if (switch_turn) {
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
+        TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100); 
+        SDL_Color black = {0, 0, 0};
+        body_t *turn_text = get_object(scene, "TURN_TEXT");
+        if(game_state_get_curr_player_turn(game_state) == 1){
+            SDL_Surface *new_text = TTF_RenderText_Solid(inspace_font, "Player One", black);
+            body_set_image(turn_text, new_text);
+        }
+        else{
+            SDL_Surface *new_text = TTF_RenderText_Solid(inspace_font, "Player Two", black);
+            body_set_image(turn_text, new_text);
+        }
     }
 
     while (list_size(balls_sunk) != 0) {
@@ -636,6 +649,18 @@ void add_initial_line(scene_t *scene){
     scene_add_body(scene, line);
 }
 
+void add_text(scene_t *scene){
+    TTF_Init();
+    list_t *shape = list_init(0, free);
+    TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100); 
+    SDL_Color black = {0, 0, 0};
+    SDL_Surface *turn = TTF_RenderText_Solid(inspace_font, "Player One", black);
+    body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0}, turn, 300, 100, "TURN_TEXT", NULL);
+    vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 100};
+    body_set_centroid(turn_text, turn_text_centroid);
+    scene_add_body(scene, turn_text);
+}
+
 void game_setup(scene_t *scene){
     add_table(scene);
     add_initial_line(scene);
@@ -644,6 +669,7 @@ void game_setup(scene_t *scene){
     add_walls(scene);
     add_holes(scene);
     add_slider(scene);
+    add_text(scene);
 }
 
 // SHE DID INDEED SAY THAT

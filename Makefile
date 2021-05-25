@@ -167,7 +167,7 @@ C_FLAGS += -FC
 # Note that a lot of the base Windows ones are missing - the
 # libraries I've distributed are _dynamically linked_, because otherwise,
 # we'd need to manually link a lot of crap.
-LIBS = SDL2main.lib SDL2.lib SDL2_gfx.lib shell32.lib SDL2_image.lib
+LIBS = SDL2main.lib SDL2.lib SDL2_gfx.lib shell32.lib SDL2_image.lib SDL2_ttf.lib
 
 # Tell cl to look for lib files in this folder
 LINKEROPTS = -LIBPATH:"C:/Users/$(USERNAME)/msvc/lib"
