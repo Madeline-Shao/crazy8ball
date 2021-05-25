@@ -41,7 +41,7 @@ const double BREEZY_CONSTANT = 12;
 const double BALL_ELASTICITY = 0.6;
 const double MU = 0.9;
 const double G = 15;
-const double DRAG_DIST = 800;
+const double DRAG_DIST = 2400;
 const double SLIDER_WIDTH = 30;
 const double SLIDER_HEIGHT = 500;
 const double SLIDER_X = 250;
@@ -51,11 +51,6 @@ const double BUTTON_Y = 230;
 const double DEFAULT_IMPULSE = 10;
 const double CUE_STICK_DEFAULT_Y = 30;
 const vector_t VELOCITY_THRESHOLD = {0.5, 0.5};
-
-// // stick force buildup, animation, and ball collision
-// body_t *shoot_stick(vector_t initial_position, int direction, double width,
-
-// }
 
 body_t *get_object(scene_t *scene, char *name){
     for (int i = 0; i < scene_bodies(scene); i++) {
@@ -170,12 +165,32 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
 
 void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *button = get_object((scene_t *) aux, "BUTTON");
-    body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
     if (y >= BUTTON_Y && y <= HIGH_RIGHT_CORNER.y - BUTTON_Y){
         body_set_centroid(button, (vector_t) {SLIDER_X, y});
+    }
+}
 
-        // body_set_centroid(cue_stick, (vector_t) {body_get_centroid(cue_stick).x + (-cos(body_get_angle(cue_stick)) * (y - yrel)),
-        //     body_get_centroid(cue_stick).x + (-sin(body_get_angle(cue_stick)) * (y - yrel))});
+void cue_ball_handler(double x, double y, double xrel, double yrel, void *aux) {
+    body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
+    body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
+    vector_t table_centroid = body_get_centroid(get_object((scene_t *) aux, "POOL_TABLE"));
+    if (x < table_centroid.x + TABLE_WIDTH / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS && x > table_centroid.x - TABLE_WIDTH / 2 + TABLE_WALL_THICKNESS  + WALL_THICKNESS / 2 + BALL_RADIUS
+        && y < table_centroid.y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS && y > table_centroid.y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS){
+        scene_t *scene = (scene_t *)aux;
+        for (int i = 0; i < scene_bodies(scene); i++) {
+            body_t *body = scene_get_body(scene, i);
+            if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "8_BALL")) {
+                vector_t ball_centroid = body_get_centroid(body);
+                if (x < ball_centroid.x + BALL_RADIUS * 2 && x > ball_centroid.x - BALL_RADIUS * 2 && y < ball_centroid.y + BALL_RADIUS * 2
+                    && y > ball_centroid.y - BALL_RADIUS * 2) {
+                    return;
+                }
+            }
+        }
+        body_set_centroid(cue_ball, (vector_t) {x, y});
+        vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+        body_set_centroid(cue_stick, cue_centroid);
+        body_set_origin(cue_stick, body_get_centroid(cue_ball));
     }
 }
 
@@ -210,6 +225,7 @@ bool is_balls_stopped(scene_t *scene) {
 bool self_balls_done(scene_t *scene) {
     for (int i = 0; i < scene_bodies(scene); i++) {
         body_t *ball = scene_get_body(scene, i);
+        printf("self balls done: %s\n", game_state_get_current_type(scene_get_game_state(scene)));
         if (!strcmp(body_get_info(ball), game_state_get_current_type(scene_get_game_state(scene)))){
             return false;
         }
@@ -217,14 +233,18 @@ bool self_balls_done(scene_t *scene) {
     return true;
 }
 
+void clear_scene(scene_t *scene) {
+    for (int i = 0; i < scene_bodies(scene); i++) {
+        body_t *body = scene_get_body(scene, i);
+        if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "8_BALL")
+            || !strcmp(body_get_info(body), "CUE_BALL") || !strcmp(body_get_info(body), "CUE_STICK")) {
+            body_remove(body);
+        }
+    }
+}
+
 void gameplay_handler(scene_t *scene) {
     game_state_t *game_state = scene_get_game_state(scene);
-    if (game_state_get_player_1_type(game_state) != NULL && game_state_get_player_2_type(game_state) != NULL) {
-        printf("current turn: %d, 1_type: %s, 2_type: %s\n", game_state_get_curr_player_turn(game_state), game_state_get_player_1_type(game_state), game_state_get_player_2_type(game_state));
-    }
-    else {
-        printf("current turn: %d\n", game_state_get_curr_player_turn(game_state));
-    }
 
     bool switch_turn = false;
     bool self_balls_sunk = false;
@@ -237,22 +257,41 @@ void gameplay_handler(scene_t *scene) {
         if (!strcmp(body_get_info(ball), "CUE_BALL")) {
             switch_turn = true;
             cue_ball_sunk = true;
-            //TODO cue ball placement
+            game_state_set_cue_ball_sunk(game_state, true);
         }
         // 8 ball is sunk and all of your own balls are already sunk
-        else if (!strcmp(body_get_info(ball), "8_BALL") && self_balls_done(scene)) {
-            //TODO win condition
-            //break
+        else if (!strcmp(body_get_info(ball), "8_BALL") && game_state_get_current_type(scene_get_game_state(scene)) != NULL && self_balls_done(scene)) {
+            char winner[9];
+            snprintf(winner, 9, "Player %d", game_state_get_curr_player_turn(game_state));
+            printf("winner : %s\n", winner);
+            game_state_set_winner(game_state, winner);
+            clear_scene(scene);
         }
         // 8 ball is sunk prematurely
         else if (!strcmp(body_get_info(ball), "8_BALL")) {
-            //TODO loss condition
-            //break
+            char winner[9];
+            snprintf(winner, 9, "Player %d", 3 - game_state_get_curr_player_turn(game_state));
+            printf("winner : %s\n", winner);
+            game_state_set_winner(game_state, winner);
+            clear_scene(scene);
         }
         // sink one of your own balls
         else if (game_state_get_current_type(game_state) != NULL && !strcmp(body_get_info(ball), game_state_get_current_type(game_state))) {
             self_balls_sunk = true;
         }
+    }
+    if (!cue_ball_sunk) {
+        game_state_set_cue_ball_sunk(game_state, false);
+    }
+    else {
+        body_t *cue_ball = get_object(scene, "CUE_BALL");
+        body_t *cue_stick = get_object(scene, "CUE_STICK");
+        SDL_Surface *ball_image = IMG_Load("images/ball_16.png");
+        body_set_image(cue_ball, ball_image);
+        body_set_centroid(cue_ball, (vector_t){HIGH_RIGHT_CORNER.x * 4 / 7, HIGH_RIGHT_CORNER.y / 2});
+        vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+        body_set_centroid(cue_stick, cue_centroid);
+        body_set_origin(cue_stick, body_get_centroid(cue_ball));
     }
 
     // setting the type for each player
@@ -306,7 +345,7 @@ void gameplay_handler(scene_t *scene) {
     while (list_size(balls_sunk) != 0) {
         body_t *ball = list_remove(balls_sunk, 0);
         // if not a cue ball
-        if ((char *) strcmp(body_get_info(ball), "CUE_BALL")) {
+        if (strcmp(body_get_info(ball), "CUE_BALL")) {
             body_remove(ball);
         }
     }
@@ -314,20 +353,35 @@ void gameplay_handler(scene_t *scene) {
     // set to true later in shoot handler
     game_state_set_end_of_turn(game_state, false);
     game_state_set_first_turn(game_state, false);
+    if (game_state_get_player_1_type(game_state) != NULL && game_state_get_player_2_type(game_state) != NULL) {
+        printf("current turn: %d, 1_type: %s, 2_type: %s\n", game_state_get_curr_player_turn(game_state), game_state_get_player_1_type(game_state), game_state_get_player_2_type(game_state));
+    }
+    else {
+        printf("current turn: %d\n", game_state_get_curr_player_turn(game_state));
+    }
 }
 
 // stick rotation
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
-    if (key == SDL_BUTTON_LEFT) {
+    if (key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) == NULL) {
         if (type == MOUSE_DOWN) {
             // printf("mouse down  - x: %f, y: %f\n", x, y);
             if(is_balls_stopped((scene_t *) aux)){
                 body_t *button = get_object((scene_t *) aux, "BUTTON");
+                body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
+                game_state_t *game_state = scene_get_game_state((scene_t *) aux);
                 if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
                     && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
                     && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
                     && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
-                        sdl_on_motion((motion_handler_t)slider_handler, aux);
+                    sdl_on_motion((motion_handler_t)slider_handler, aux);
+                }
+                else if (x >= body_get_centroid(cue_ball).x - BALL_RADIUS
+                    && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
+                    && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
+                    && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
+                        //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
+                    sdl_on_motion((motion_handler_t)cue_ball_handler, aux);
                 }
                 else{
                     sdl_on_motion((motion_handler_t)rotation_handler, aux);
@@ -551,6 +605,7 @@ void game_setup(scene_t *scene){
 void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
     list_add(game_state_get_balls_sunk(scene_get_game_state((scene_t *) aux)), ball);
     body_set_image(ball, NULL);
+    body_set_velocity(ball, (vector_t) {0, 0});
 }
 
 void add_forces(scene_t *scene){
@@ -581,7 +636,7 @@ void stop_balls(scene_t *scene){
         if (fabs(velocity.x) < VELOCITY_THRESHOLD.x && fabs(velocity.y) < VELOCITY_THRESHOLD.y){
             body_set_velocity(body, (vector_t) {0, 0});
         }
-        /*if (!strcmp(body_get_info(body), "CUE_BALL")){   
+        /*if (!strcmp(body_get_info(body), "CUE_BALL")){
             printf("%f %f\n", velocity.x, velocity.y);
         }*/
     }
@@ -601,11 +656,14 @@ int main(){
         sdl_render_scene(scene);
         scene_tick(scene, time_since_last_tick());
         stop_balls(scene);
-        if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene)){
+        if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene) && game_state_get_winner(scene_get_game_state(scene)) == NULL){
             vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball(scene)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
             body_set_centroid(get_cue_stick(scene), cue_centroid);
-            body_set_origin(get_cue_stick(scene), body_get_centroid(get_cue_ball(scene)));    
+            body_set_origin(get_cue_stick(scene), body_get_centroid(get_cue_ball(scene)));
             gameplay_handler(scene);
+        }
+        if (game_state_get_winner(scene_get_game_state(scene)) != NULL) {
+            // printf("winner: %s: \n", game_state_get_winner(scene_get_game_state(scene)));
         }
     }
     scene_free(scene);

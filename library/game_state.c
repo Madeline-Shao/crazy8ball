@@ -12,6 +12,8 @@ typedef struct game_state{
     char *player_1_type;
     char *player_2_type;
     bool end_of_turn;
+    bool cue_ball_sunk;
+    char *winner;
 } game_state_t;
 
 game_state_t *game_state_init(void){
@@ -24,6 +26,8 @@ game_state_t *game_state_init(void){
     new_game_state->end_of_turn = false;
     list_t *balls_sunk = list_init(1, (free_func_t) body_free);
     new_game_state->balls_sunk = balls_sunk;
+    new_game_state->cue_ball_sunk = false;
+    new_game_state->winner = NULL;
     return new_game_state;
 }
 
@@ -58,6 +62,22 @@ bool game_state_get_end_of_turn(game_state_t *game_state){
 
 list_t *game_state_get_balls_sunk(game_state_t *game_state){
     return game_state->balls_sunk;
+}
+
+bool game_state_get_cue_ball_sunk(game_state_t *game_state) {
+    return game_state->cue_ball_sunk;
+}
+
+char *game_state_get_winner(game_state_t *game_state) {
+    return game_state->winner;
+}
+
+void game_state_set_winner(game_state_t *game_state, char *winner) {
+    game_state->winner = winner;
+}
+
+void game_state_set_cue_ball_sunk(game_state_t *game_state, bool cue_ball_sunk) {
+    game_state->cue_ball_sunk = cue_ball_sunk;
 }
 
 void game_state_set_curr_player_turn(game_state_t *game_state, size_t turn){

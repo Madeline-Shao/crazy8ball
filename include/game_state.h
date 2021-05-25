@@ -22,6 +22,14 @@ bool game_state_get_end_of_turn(game_state_t *game_state);
 
 list_t *game_state_get_balls_sunk(game_state_t *game_state);
 
+bool game_state_get_cue_ball_sunk(game_state_t *game_state);
+
+char *game_state_get_winner(game_state_t *game_state);
+
+void game_state_set_winner(game_state_t *game_state, char *winner);
+
+void game_state_set_cue_ball_sunk(game_state_t *game_state, bool cue_ball_sunk);
+
 void game_state_set_curr_player_turn(game_state_t *game_state, size_t turn);
 
 void game_state_set_first_turn(game_state_t *game_state, bool first_turn);
