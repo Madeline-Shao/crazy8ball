@@ -87,6 +87,25 @@ body_t *get_cue_stick(scene_t *scene) {
     return NULL;
 }
 
+list_t *circle_init(double radius){
+    list_t *circle_list = list_init(CIRCLE_POINTS, (free_func_t) free);
+    for (size_t i = 0; i < CIRCLE_POINTS - 1; i++) {
+        double angle = 2 * M_PI * i / CIRCLE_POINTS;
+        vector_t *v = malloc(sizeof(vector_t));
+        *v = (vector_t) {radius * cos(angle), radius * sin(angle)};
+        list_add(circle_list, (void *) v);
+    }
+    return circle_list;
+}
+
+bool overlaps(double x, double y, vector_t centroid){
+    if (x < centroid.x + BALL_RADIUS * 2 && x > centroid.x - BALL_RADIUS * 2 && y < centroid.y + BALL_RADIUS * 2
+                    && y > centroid.y - BALL_RADIUS * 2){
+                        return true;
+                    }
+    return false;
+}
+
 void play_balls_colliding(int channel) {
     Mix_Chunk *balls_colliding = Mix_LoadWAV("sounds/balls_colliding.wav");
     int play = Mix_PlayChannel(channel, balls_colliding, 0);
@@ -223,8 +242,7 @@ void cue_ball_handler(double x, double y, double xrel, double yrel, void *aux) {
             body_t *body = scene_get_body(scene, i);
             if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "8_BALL")) {
                 vector_t ball_centroid = body_get_centroid(body);
-                if (x < ball_centroid.x + BALL_RADIUS * 2 && x > ball_centroid.x - BALL_RADIUS * 2 && y < ball_centroid.y + BALL_RADIUS * 2
-                    && y > ball_centroid.y - BALL_RADIUS * 2) {
+                if (overlaps(x, y, ball_centroid)) {
                     return;
                 }
             }
@@ -296,6 +314,58 @@ void change_text(scene_t *scene, char *info, char *text, TTF_Font *font){
     body_set_image(get_object(scene, info), new_text);
 }
 
+body_t *create_ball(scene_t *scene, char *info, char *img){
+    body_t *ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, img,
+                                        2*BALL_RADIUS, 2*BALL_RADIUS, info, NULL);
+    // scene_add_body(scene, ball);
+    return ball;
+}
+
+void add_balls_powerup(scene_t *scene, char *info){
+    printf("fuck you little shit");
+    list_t *ball_list = list_init(4, (free_func_t) body_free);
+
+    if (!strcmp(game_state_get_curr_player_turn(scene_get_game_state(scene)), "SOLID_BALL")){
+        for (int i = 0; i < 4; i++){
+            body_t *ball = create_ball(scene, "STRIPED_BALL", "images/special_striped_ball.png");
+            list_add(ball_list, ball);
+            scene_add_body(scene, ball);
+        }
+    }
+    else {
+        for (int i = 0; i < 4; i++){
+            body_t *ball = create_ball(scene, "SOLID_BALL", "images/special_solid_ball.png");
+            list_add(ball_list, ball);
+            scene_add_body(scene, ball);
+        }
+    }
+
+        double maxx = body_get_centroid(get_object(scene, "POOL_TABLE")).x + TABLE_WIDTH / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS;
+        double minx = body_get_centroid(get_object(scene, "POOL_TABLE")).x - TABLE_WIDTH / 2 + TABLE_WALL_THICKNESS  + WALL_THICKNESS / 2 + BALL_RADIUS;
+        double maxy = body_get_centroid(get_object(scene, "POOL_TABLE")).y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS;
+        double miny = body_get_centroid(get_object(scene, "POOL_TABLE")).y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS;
+    
+    for (int i = 0; i < 4; i++){
+        int xcoord;
+        int ycoord;
+        while (true){
+            xcoord = rand() / RAND_MAX * (maxx - minx) + minx;
+            ycoord = rand() / RAND_MAX * (maxx - minx) + minx;
+
+            for (int i = 0; i < scene_bodies(scene); i++) {
+                body_t *body = scene_get_body(scene, i);
+                if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "8_BALL")) {
+                    vector_t ball_centroid = body_get_centroid(body);
+                    if (!overlaps(xcoord, ycoord, ball_centroid)) {
+                        break;
+                    }
+                }
+            }
+        }
+        body_set_centroid(list_get(ball_list, i), (vector_t) {xcoord, ycoord});
+    }
+}
+
 void gameplay_handler(scene_t *scene, TTF_Font *font) {
     game_state_t *game_state = scene_get_game_state(scene);
 
@@ -304,7 +374,31 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     bool cue_ball_sunk = false;
 
     list_t *balls_sunk = game_state_get_balls_sunk(game_state);
+    bool applied_power = false;
     for (int i = 0; i < list_size(balls_sunk); i++) {
+        if (game_state_get_current_type(scene_get_game_state(scene)) != NULL && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene))) && !applied_power){
+            float power_rand = rand() % RAND_MAX;
+            // if (power_rand > 0.8 && power_rand < 0.85){
+            if (power_rand > 0){
+                printf("check\n");
+                add_balls_powerup(scene, game_state_get_current_type(scene_get_game_state(scene)));
+                applied_power = true;
+            }
+            else if (power_rand > 0.85 && power_rand < 0.9){
+                //powerup 2
+                applied_power = true;
+            }
+            else if (power_rand > 0.9 && power_rand < 0.95){
+                // powerdown 1
+                applied_power = true;
+            }
+            else if (power_rand > 0.95){
+                // powerdown 2
+                applied_power = true;
+            }
+        }
+
+
         body_t *ball = list_get(balls_sunk, i);
         // cue ball is sunk
         if (!strcmp(body_get_info(ball), "CUE_BALL")) {
@@ -497,18 +591,6 @@ list_t *rect_init(double width, double height) {
     return rect;
 }
 
-list_t *circle_init(double radius){
-    list_t *circle_list = list_init(CIRCLE_POINTS, (free_func_t) free);
-    for (size_t i = 0; i < CIRCLE_POINTS - 1; i++) {
-        double angle = 2 * M_PI * i / CIRCLE_POINTS;
-        vector_t *v = malloc(sizeof(vector_t));
-        *v = (vector_t) {radius * cos(angle), radius * sin(angle)};
-        list_add(circle_list, (void *) v);
-    }
-    return circle_list;
-}
-
-
 void add_stick(scene_t * scene) {
     list_t *stick_shape = rect_init(CUE_STICK_WIDTH, CUE_STICK_HEIGHT);
     SDL_Surface *ball_image = IMG_Load("images/cue_stick.png");
@@ -551,20 +633,16 @@ void add_balls(scene_t *scene) {
         SDL_Surface *ball_image = IMG_Load(name);
         body_t *pool_ball;
         if (i < 8) {
-            pool_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, ball_image,
-                                        2*BALL_RADIUS, 2*BALL_RADIUS, "SOLID_BALL", NULL);
+            pool_ball = create_ball(scene, "SOLID_BALL", ball_image);
         }
         else if (i == 8) {
-            pool_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, ball_image,
-                                        2*BALL_RADIUS, 2*BALL_RADIUS, "8_BALL", NULL);
+            pool_ball = create_ball(scene, "8_BALL", ball_image);
         }
         else if (i == 16) {
-            pool_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, ball_image,
-                                        2*BALL_RADIUS, 2*BALL_RADIUS, "CUE_BALL", NULL);
+            pool_ball = create_ball(scene, "CUE_BALL", ball_image);
         }
         else {
-            pool_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, ball_image,
-                                        2*BALL_RADIUS, 2*BALL_RADIUS, "STRIPED_BALL", NULL);
+            pool_ball = create_ball(scene, "STRIPED_BALL", ball_image);
         }
 
         if (i != 16) { //don't want the white cue ball in the triangle - magic number?
