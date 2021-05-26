@@ -230,7 +230,8 @@ void cue_ball_handler(double x, double y, double xrel, double yrel, void *aux) {
             }
         }
         body_set_centroid(cue_ball, (vector_t) {x, y});
-        vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+        vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), 
+                                    (vector_t) {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(body_get_angle(cue_stick)), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(body_get_angle(cue_stick))});
         body_set_centroid(cue_stick, cue_centroid);
         body_set_origin(cue_stick, body_get_centroid(cue_ball));
     }
@@ -283,7 +284,7 @@ void clear_scene(scene_t *scene) {
     for (int i = 0; i < scene_bodies(scene); i++) {
         body_t *body = scene_get_body(scene, i);
         if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "8_BALL")
-            || !strcmp(body_get_info(body), "CUE_BALL") || !strcmp(body_get_info(body), "CUE_STICK")) {
+            || !strcmp(body_get_info(body), "CUE_BALL") || !strcmp(body_get_info(body), "CUE_STICK") || !strcmp(body_get_info(body), "TURN_TEXT")) {
             body_remove(body);
         }
     }
@@ -315,17 +316,23 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         else if (!strcmp(body_get_info(ball), "8_BALL") && game_state_get_current_type(scene_get_game_state(scene)) != NULL && self_balls_done(scene)) {
             char winner[9];
             snprintf(winner, 9, "Player %d", game_state_get_curr_player_turn(game_state));
-            printf("winner : %s\n", winner);
             game_state_set_winner(game_state, winner);
             clear_scene(scene);
+
+            char win_message[17];
+            snprintf(win_message, 17, "Winner: %s!", game_state_get_winner(game_state));
+            change_text(scene, "WIN_TEXT", win_message, font);
         }
         // 8 ball is sunk prematurely
         else if (!strcmp(body_get_info(ball), "8_BALL")) {
             char winner[9];
             snprintf(winner, 9, "Player %d", 3 - game_state_get_curr_player_turn(game_state));
-            printf("winner : %s\n", winner);
             game_state_set_winner(game_state, winner);
             clear_scene(scene);
+
+            char win_message[17];
+            snprintf(win_message, 17, "Winner: %s!", game_state_get_winner(game_state));
+            change_text(scene, "WIN_TEXT", win_message, font);
         }
         // sink one of your own balls
         else if (game_state_get_current_type(game_state) != NULL && !strcmp(body_get_info(ball), game_state_get_current_type(game_state))) {
@@ -679,7 +686,6 @@ void add_initial_line(scene_t *scene){
 
 void add_text(scene_t *scene, TTF_Font *font){
     list_t *shape = list_init(0, free);
-    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100);
     SDL_Surface *turn = TTF_RenderText_Solid(font, "Player One", BLACK_COLOR);
     body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0}, turn, 300, 100, "TURN_TEXT", NULL);
     vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 100};
@@ -687,13 +693,18 @@ void add_text(scene_t *scene, TTF_Font *font){
     scene_add_body(scene, turn_text);
 
     list_t *shape1 = list_init(0, free);
-    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100);
-    SDL_Color black = {0, 0, 0};
-    SDL_Surface *type = TTF_RenderText_Solid(font, "", black);
+    SDL_Surface *type = TTF_RenderText_Solid(font, "", BLACK_COLOR);
     body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0}, type, 700, 100, "TYPE_TEXT", NULL);
     vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 100};
     body_set_centroid(type_text, type_text_centroid);
     scene_add_body(scene, type_text);
+
+    list_t *shape2 = list_init(0, free);
+    SDL_Surface *win = TTF_RenderText_Solid(font, "", BLACK_COLOR);
+    body_t *win_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0}, type, 700, 100, "WIN_TEXT", NULL);
+    vector_t win_text_centroid = {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2};
+    body_set_centroid(win_text, win_text_centroid);
+    scene_add_body(scene, win_text);
 }
 
 void add_background(scene_t *scene) {

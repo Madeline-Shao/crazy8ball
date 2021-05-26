@@ -24,7 +24,7 @@ LIB_MATH = -lm
 # Compiler flags that link the program with the math and SDL libraries.
 # Note that $(...) substitutes a variable's value, so this line is equivalent to
 # LIBS = -lm -lSDL2 -lSDL2_gfx
-LIBS = $(LIB_MATH) $(shell sdl2-config --libs) -lSDL2_gfx -lSDL2_image -lSDL2_ttf -lSDL2_mixer
+LIBS = $(LIB_MATH) $(shell sdl2-config --libs) -lSDL2_gfx -lSDL2_image -lSDL2_ttf -lSDL2_mixer 
 
 # List of compiled .o files corresponding to STUDENT_LIBS, e.g. "out/vector.o".
 # Don't worry about the syntax; it's just adding "out/" to the start
@@ -167,7 +167,7 @@ C_FLAGS += -FC
 # Note that a lot of the base Windows ones are missing - the
 # libraries I've distributed are _dynamically linked_, because otherwise,
 # we'd need to manually link a lot of crap.
-LIBS = SDL2main.lib SDL2.lib SDL2_gfx.lib shell32.lib SDL2_image.lib SDL2_ttf.lib
+LIBS = SDL2main.lib SDL2.lib SDL2_gfx.lib shell32.lib SDL2_image.lib SDL2_ttf.lib SDL2_mixer.lib
 
 # Tell cl to look for lib files in this folder
 LINKEROPTS = -LIBPATH:"C:/Users/$(USERNAME)/msvc/lib"
