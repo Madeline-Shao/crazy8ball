@@ -108,17 +108,17 @@ bool overlaps(double x, double y, vector_t centroid){
 
 void play_balls_colliding(int channel) {
     Mix_Chunk *balls_colliding = Mix_LoadWAV("sounds/balls_colliding.wav");
-    int play = Mix_PlayChannel(channel, balls_colliding, 0);
+    Mix_PlayChannel(channel, balls_colliding, 0);
 }
 
 void play_cue_stick_ball(int channel) {
     Mix_Chunk *cue_stick_ball = Mix_LoadWAV("sounds/cue_stick_ball.wav");
-    int play = Mix_PlayChannel(channel, cue_stick_ball, 0);
+    Mix_PlayChannel(channel, cue_stick_ball, 0);
 }
 
 void play_pocket(int channel) {
     Mix_Chunk *pocket = Mix_LoadWAV("sounds/pocket.wav");
-    int play = Mix_PlayChannel(channel, pocket, 0);
+    Mix_PlayChannel(channel, pocket, 0);
 }
 
 void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
@@ -248,7 +248,7 @@ void cue_ball_handler(double x, double y, double xrel, double yrel, void *aux) {
             }
         }
         body_set_centroid(cue_ball, (vector_t) {x, y});
-        vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), 
+        vector_t cue_centroid = vec_add(body_get_centroid(cue_ball),
                                     (vector_t) {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(body_get_angle(cue_stick)), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(body_get_angle(cue_stick))});
         body_set_centroid(cue_stick, cue_centroid);
         body_set_origin(cue_stick, body_get_centroid(cue_ball));
@@ -314,7 +314,7 @@ void change_text(scene_t *scene, char *info, char *text, TTF_Font *font){
     body_set_image(get_object(scene, info), new_text);
 }
 
-body_t *create_ball(scene_t *scene, char *info, char *img){
+body_t *create_ball(scene_t *scene, char *info, SDL_Surface *img){
     body_t *ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, img,
                                         2*BALL_RADIUS, 2*BALL_RADIUS, info, NULL);
     // scene_add_body(scene, ball);
@@ -325,38 +325,42 @@ void add_balls_powerup(scene_t *scene, char *info){
     printf("fuck you little shit");
     list_t *ball_list = list_init(4, (free_func_t) body_free);
 
-    if (!strcmp(game_state_get_curr_player_turn(scene_get_game_state(scene)), "SOLID_BALL")){
+    if (!strcmp(game_state_get_current_type(scene_get_game_state(scene)), "SOLID_BALL")){
         for (int i = 0; i < 4; i++){
-            body_t *ball = create_ball(scene, "STRIPED_BALL", "images/special_striped_ball.png");
+            SDL_Surface *image = IMG_Load("images/special_striped_ball.png");
+            body_t *ball = create_ball(scene, "STRIPED_BALL", image);
             list_add(ball_list, ball);
             scene_add_body(scene, ball);
         }
     }
     else {
         for (int i = 0; i < 4; i++){
-            body_t *ball = create_ball(scene, "SOLID_BALL", "images/special_solid_ball.png");
+            SDL_Surface *image = IMG_Load("images/special_solid_ball.png");
+            body_t *ball = create_ball(scene, "SOLID_BALL", image);
             list_add(ball_list, ball);
             scene_add_body(scene, ball);
         }
     }
 
-        double maxx = body_get_centroid(get_object(scene, "POOL_TABLE")).x + TABLE_WIDTH / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS;
-        double minx = body_get_centroid(get_object(scene, "POOL_TABLE")).x - TABLE_WIDTH / 2 + TABLE_WALL_THICKNESS  + WALL_THICKNESS / 2 + BALL_RADIUS;
-        double maxy = body_get_centroid(get_object(scene, "POOL_TABLE")).y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS;
-        double miny = body_get_centroid(get_object(scene, "POOL_TABLE")).y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS;
-    
+    double maxx = body_get_centroid(get_object(scene, "POOL_TABLE")).x + TABLE_WIDTH / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS;
+    double minx = body_get_centroid(get_object(scene, "POOL_TABLE")).x - TABLE_WIDTH / 2 + TABLE_WALL_THICKNESS  + WALL_THICKNESS / 2 + BALL_RADIUS;
+    double maxy = body_get_centroid(get_object(scene, "POOL_TABLE")).y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS;
+    double miny = body_get_centroid(get_object(scene, "POOL_TABLE")).y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS;
+
     for (int i = 0; i < 4; i++){
         int xcoord;
         int ycoord;
-        while (true){
-            xcoord = rand() / RAND_MAX * (maxx - minx) + minx;
-            ycoord = rand() / RAND_MAX * (maxx - minx) + minx;
+        bool brake = false;
+        while (!brake){
+            xcoord = rand() / (float) RAND_MAX * (maxx - minx) + minx;
+            ycoord = rand() / (float) RAND_MAX * (maxy - miny) + miny;
 
             for (int i = 0; i < scene_bodies(scene); i++) {
                 body_t *body = scene_get_body(scene, i);
                 if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "8_BALL")) {
                     vector_t ball_centroid = body_get_centroid(body);
                     if (!overlaps(xcoord, ycoord, ball_centroid)) {
+                        brake = true;
                         break;
                     }
                 }
@@ -376,8 +380,15 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     list_t *balls_sunk = game_state_get_balls_sunk(game_state);
     bool applied_power = false;
     for (int i = 0; i < list_size(balls_sunk); i++) {
+        if (game_state_get_current_type(scene_get_game_state(scene)) != NULL) {
+            printf("hasdflkjskdfj");
+            if (!strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene))))
+                printf("ahahahaah");
+        }
+
         if (game_state_get_current_type(scene_get_game_state(scene)) != NULL && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene))) && !applied_power){
-            float power_rand = rand() % RAND_MAX;
+            float power_rand = rand() / (float) RAND_MAX;
+            printf("rand: %f\n", power_rand);
             // if (power_rand > 0.8 && power_rand < 0.85){
             if (power_rand > 0){
                 printf("check\n");
@@ -779,7 +790,7 @@ void add_text(scene_t *scene, TTF_Font *font){
 
     list_t *shape2 = list_init(0, free);
     SDL_Surface *win = TTF_RenderText_Solid(font, "", BLACK_COLOR);
-    body_t *win_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0}, type, 700, 100, "WIN_TEXT", NULL);
+    body_t *win_text = body_init_with_info(shape2, INFINITY, (rgb_color_t) {1, 0, 0}, win, 700, 100, "WIN_TEXT", NULL);
     vector_t win_text_centroid = {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2};
     body_set_centroid(win_text, win_text_centroid);
     scene_add_body(scene, win_text);
