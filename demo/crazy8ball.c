@@ -16,6 +16,7 @@
 #include <string.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 
 const vector_t LOW_LEFT_CORNER = {0, 0};
 const vector_t HIGH_RIGHT_CORNER = {1500, 900};
@@ -84,6 +85,21 @@ body_t *get_cue_stick(scene_t *scene) {
         }
     }
     return NULL;
+}
+
+void play_balls_colliding(int channel) {
+    Mix_Chunk *balls_colliding = Mix_LoadWAV("sounds/balls_colliding.wav");
+    int play = Mix_PlayChannel(channel, balls_colliding, 0);
+}
+
+void play_cue_stick_ball(int channel) {
+    Mix_Chunk *cue_stick_ball = Mix_LoadWAV("sounds/cue_stick_ball.wav");
+    int play = Mix_PlayChannel(channel, cue_stick_ball, 0);
+}
+
+void play_pocket(int channel) {
+    Mix_Chunk *pocket = Mix_LoadWAV("sounds/pocket.wav");
+    int play = Mix_PlayChannel(channel, pocket, 0);
 }
 
 void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
@@ -177,7 +193,7 @@ void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
         body_set_centroid(button, (vector_t) {SLIDER_X, y});
         vector_t curr_centroid = body_get_centroid(cue_ball);
         double adjustment = (y - BUTTON_Y) / y_total * PULL_FACTOR_ADJUSTMENT_CONSTANT + (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2);
-        body_set_centroid(cue_stick, (vector_t) {curr_centroid.x + adjustment * cos(angle), 
+        body_set_centroid(cue_stick, (vector_t) {curr_centroid.x + adjustment * cos(angle),
                                                  curr_centroid.y + adjustment * sin(angle)});
     }
 }
@@ -224,10 +240,11 @@ void shoot_handler(double y, void *aux){
     body_t *button = get_object((scene_t *) aux, "BUTTON");
     body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
-    if (body_get_centroid(button).y != BUTTON_Y){   
+    if (body_get_centroid(button).y != BUTTON_Y){
         if (game_state_get_first_turn(scene_get_game_state((scene_t *) aux))){
             body_remove(get_object((scene_t *) aux, "INITIAL_LINE"));
         }
+        play_cue_stick_ball(1);
         body_set_centroid(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
         body_set_origin(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
         double impulse_factor = y - BUTTON_Y;
@@ -362,7 +379,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                         }
                     }
                     self_balls_sunk = true;
-                    
+
                     char type[45];
                     if (!strcmp(game_state_get_player_1_type(game_state), "SOLID_BALL")){
                         snprintf(type, 45, "Player One: %s | Player Two: %s", "SOLID", "STRIPES");
@@ -405,12 +422,12 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     if (game_state_get_first_turn(game_state)){
         game_state_set_first_turn(game_state, false);
     }
-    if (game_state_get_player_1_type(game_state) != NULL && game_state_get_player_2_type(game_state) != NULL) {
-        printf("current turn: %d, 1_type: %s, 2_type: %s\n", game_state_get_curr_player_turn(game_state), game_state_get_player_1_type(game_state), game_state_get_player_2_type(game_state));
-    }
-    else {
-        printf("current turn: %d\n", game_state_get_curr_player_turn(game_state));
-    }
+    // if (game_state_get_player_1_type(game_state) != NULL && game_state_get_player_2_type(game_state) != NULL) {
+    //     printf("current turn: %d, 1_type: %s, 2_type: %s\n", game_state_get_curr_player_turn(game_state), game_state_get_player_1_type(game_state), game_state_get_player_2_type(game_state));
+    // }
+    // else {
+    //     printf("current turn: %d\n", game_state_get_curr_player_turn(game_state));
+    // }
 }
 
 // stick rotation
@@ -662,7 +679,7 @@ void add_initial_line(scene_t *scene){
 
 void add_text(scene_t *scene, TTF_Font *font){
     list_t *shape = list_init(0, free);
-    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100); 
+    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100);
     SDL_Surface *turn = TTF_RenderText_Solid(font, "Player One", BLACK_COLOR);
     body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0}, turn, 300, 100, "TURN_TEXT", NULL);
     vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 100};
@@ -670,7 +687,7 @@ void add_text(scene_t *scene, TTF_Font *font){
     scene_add_body(scene, turn_text);
 
     list_t *shape1 = list_init(0, free);
-    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100); 
+    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100);
     SDL_Color black = {0, 0, 0};
     SDL_Surface *type = TTF_RenderText_Solid(font, "", black);
     body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0}, type, 700, 100, "TYPE_TEXT", NULL);
@@ -679,7 +696,24 @@ void add_text(scene_t *scene, TTF_Font *font){
     scene_add_body(scene, type_text);
 }
 
+void add_background(scene_t *scene) {
+    list_t *bg_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    SDL_Surface *bg_image = IMG_Load("images/background.jpg");
+    body_t *bg = body_init_with_info(bg_list, INFINITY, (rgb_color_t) {0,0,0}, bg_image, HIGH_RIGHT_CORNER.x, HIGH_RIGHT_CORNER.y, "BACKGROUND", NULL);//magic numbers
+    body_set_centroid(bg, (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2});
+    scene_add_body(scene, bg);
+}
+
+void sound_setup() {
+    Mix_OpenAudio(22050, AUDIO_S16SYS, 2, 4096);
+    Mix_AllocateChannels(100); //magic numbers!!!!!!!!!!!!!!!!!!!!!!!!!!
+    for (int chan = 3; chan < 100; chan++) {
+        Mix_Volume(chan, 7);
+    }
+}
+
 void game_setup(scene_t *scene, TTF_Font *font){
+    add_background(scene);
     add_table(scene);
     add_initial_line(scene);
     add_balls(scene);
@@ -688,16 +722,43 @@ void game_setup(scene_t *scene, TTF_Font *font){
     add_holes(scene);
     add_slider(scene);
     add_text(scene, font);
+    sound_setup();
 }
 
 // SHE DID INDEED SAY THAT
 void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
+    play_pocket(2);
     list_add(game_state_get_balls_sunk(scene_get_game_state((scene_t *) aux)), ball);
     body_set_image(ball, NULL);
     body_set_velocity(ball, (vector_t) {0, 0});
 }
 
+void collision_handler (body_t *body1, body_t *body2, vector_t axis, void *aux) {
+    double u1 = vec_dot(axis, body_get_velocity(body1));
+    double u2 = vec_dot(axis, body_get_velocity(body2));
+    double reduced_mass;
+    if (body_get_mass(body1) == INFINITY) {
+        reduced_mass = body_get_mass(body2);
+    }
+    else if (body_get_mass(body2) == INFINITY) {
+        reduced_mass = body_get_mass(body1);
+    }
+    else {
+        reduced_mass = (body_get_mass(body1) * body_get_mass(body2) / (body_get_mass(body1) + body_get_mass(body2)));
+    }
+    vector_t impulse = vec_multiply((reduced_mass * (1 + BALL_ELASTICITY) * (u2 - u1)), axis);
+    body_add_impulse(body1, impulse);
+    body_add_impulse(body2, vec_multiply(-1, impulse));
+}
+
+void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *aux){
+    int channel = *(int *)aux;
+    play_balls_colliding(channel);
+    collision_handler(body1, body2, axis, aux);
+}
+
 void add_forces(scene_t *scene){
+    int channel_num = 3;
     for(int i = 0; i < scene_bodies(scene) - 1; i++){
         body_t *body1 = scene_get_body(scene, i);
         if(!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL") || !strcmp(body_get_info(body1), "8_BALL") || !strcmp(body_get_info(body1), "CUE_BALL")){
@@ -705,10 +766,16 @@ void add_forces(scene_t *scene){
             for (int j = i + 1; j < scene_bodies(scene); j++) {
                 body_t *body2 = scene_get_body(scene, j);
                 if(!strcmp(body_get_info(body2), "SOLID_BALL") || !strcmp(body_get_info(body2), "STRIPED_BALL") || !strcmp(body_get_info(body2), "8_BALL") || !strcmp(body_get_info(body2), "CUE_BALL") || !strcmp(body_get_info(body2), "WALL")){
-                    create_physics_collision(scene, BALL_ELASTICITY, body1, body2);
+                    int *aux = malloc(sizeof(int));
+                    *aux = channel_num;
+                    create_collision(scene, body1, body2, (collision_handler_t) balls_collision_handler, aux, NULL);
+                    channel_num++;
                 }
                 else if(!strcmp(body_get_info(body2), "HOLE")){
+                    // int *aux = malloc(sizeof(int));
+                    // *aux = channel_num;
                     create_collision(scene, body1, body2, (collision_handler_t) ball_destroy, scene, NULL);
+                    // channel_num++;
                 }
                 if(!strcmp(body_get_info(body1), "CUE_BALL") && !strcmp(body_get_info(body2), "CUE_STICK")){
                     create_physics_collision(scene, BALL_ELASTICITY, body1, body2);
@@ -732,6 +799,7 @@ void stop_balls(scene_t *scene){
 }
 
 int main(){
+    SDL_Renderer *renderer = sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
     scene_t *scene = scene_init();
     game_state_t *game_state = game_state_init();
     scene_set_game_state(scene, game_state);
@@ -740,7 +808,6 @@ int main(){
     TTF_Font* hemihead_font = TTF_OpenFont("fonts/HEMIHEAD.TTF", 100);
     game_setup(scene, hemihead_font);
 
-    SDL_Renderer *renderer = sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
     add_forces(scene);
     sdl_on_mouse((mouse_handler_t)player_mouse_handler, scene);
