@@ -56,7 +56,7 @@ const double CUE_STICK_DEFAULT_Y = 177;
 const vector_t VELOCITY_THRESHOLD = {0.5, 0.5};
 const double TINY_CONSTANT = 0.8;
 const double PULL_FACTOR_ADJUSTMENT_CONSTANT = 47;
-const double SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR = 1.2;
+const double SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR = 1.265;
 
 body_t *get_object(scene_t *scene, char *name){
     for (int i = 0; i < scene_bodies(scene); i++) {
@@ -496,7 +496,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             }
             else if (power_rand > 0.95){
                 // powerdown 2
-                applied_power = true;
+                switch_turn = true;
             }
         }
 
