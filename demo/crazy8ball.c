@@ -490,7 +490,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                 add_ghost_powerup(scene, 0.0);
                 game_state_set_ghost_powerup(game_state, true);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER UP: You can shoot through your opponent's balls!", font);
+                change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!", font);
             }
             else if (power_rand > 0.5 && power_rand < 0.75){
                 printf("size\n");
