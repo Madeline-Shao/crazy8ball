@@ -144,6 +144,14 @@ vector_t body_get_origin(body_t *body){
     return body->origin;
 }
 
+void body_set_height(body_t *body, double height){
+    body->height = height;
+}
+
+void body_set_width(body_t *body, double width){
+    body->width = width;
+}
+
 void body_set_image(body_t *body, SDL_Surface *image) {
     body->image = image;
 }

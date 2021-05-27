@@ -117,6 +117,10 @@ double body_get_width(body_t *body);
 
 vector_t body_get_origin(body_t *body);
 
+void body_set_height(body_t *body, double height);
+
+void body_set_width(body_t *body, double width);
+
 double body_get_angle(body_t *body);
 
 void body_set_image(body_t *body, SDL_Surface *image);

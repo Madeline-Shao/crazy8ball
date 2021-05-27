@@ -352,6 +352,20 @@ body_t *create_ball(scene_t *scene, char *info, SDL_Surface *img){
     return ball;
 }
 
+void add_size_powerdown(scene_t *scene, double radius){
+    char *own_type = game_state_get_current_type(scene_get_game_state(scene));
+
+    for(size_t i = 0; i < scene_bodies(scene); i++){
+        body_t *body = scene_get_body(scene, i);
+        if(!strcmp(body_get_info(body), own_type)){
+            list_t *new_circle = circle_init(radius);
+            body_set_shape(body, new_circle, body_get_centroid(body));
+            body_set_height(body, 2 * radius);
+            body_set_width(body, 2 * radius);
+        }
+    }
+}
+
 void add_ghost_powerup(scene_t *scene, double mass){
     char *opponent_type[13];
 
@@ -467,14 +481,16 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                 add_balls_powerup(scene);
                 applied_power = true;
             }
-            else if (power_rand > 0){
+            else if (power_rand > 0.85 && power_rand < 0.9){
                 //powerup 2
                 add_ghost_powerup(scene, 0.0);
                 game_state_set_ghost_powerup(game_state, true);
                 applied_power = true;
             }
-            else if (power_rand > 0.9 && power_rand < 0.95){
+            else if (power_rand > 0){
                 // powerdown 1
+                add_size_powerdown(scene, 2 * BALL_RADIUS);
+                game_state_set_size_powerdown(game_state, true);
                 applied_power = true;
             }
             else if (power_rand > 0.95){
@@ -588,7 +604,9 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     if (switch_turn) {
         if(game_state_get_ghost_powerup(game_state)){
             add_ghost_powerup(scene, BALL_MASS);
+            add_size_powerdown(scene, BALL_RADIUS);
             game_state_set_ghost_powerup(game_state, false);
+            game_state_set_size_powerdown(game_state, false);
         }
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
         if(game_state_get_curr_player_turn(game_state) == 1){
