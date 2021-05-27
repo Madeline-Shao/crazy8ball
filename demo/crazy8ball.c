@@ -489,7 +489,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             }
             else if (power_rand > 0){
                 // powerdown 1
-                add_size_powerdown(scene, 2 * BALL_RADIUS);
+                add_size_powerdown(scene, 2 * HOLE_RADIUS);
                 game_state_set_size_powerdown(game_state, true);
                 applied_power = true;
             }
@@ -602,14 +602,16 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         switch_turn = true;
     }
     if (switch_turn) {
-        if(game_state_get_ghost_powerup(game_state)){
+        if (game_state_get_ghost_powerup(game_state)){
             add_ghost_powerup(scene, BALL_MASS);
-            add_size_powerdown(scene, BALL_RADIUS);
             game_state_set_ghost_powerup(game_state, false);
+        }
+        if (game_state_get_size_powerdown(game_state)){
+            add_size_powerdown(scene, BALL_RADIUS);
             game_state_set_size_powerdown(game_state, false);
         }
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
-        if(game_state_get_curr_player_turn(game_state) == 1){
+        if (game_state_get_curr_player_turn(game_state) == 1){
             change_text(scene, "TURN_TEXT", "Player One", font);
         }
         else{
