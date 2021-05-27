@@ -54,4 +54,4 @@ void game_state_set_ghost_powerup(game_state_t *game_state, bool ghost_powerup);
 
 void game_state_set_size_powerdown(game_state_t *game_state, bool size_powerdown);
 
-void game_state_set_turn_powerdown(game_state_t *game_state, bool turn_powerdown)
+void game_state_set_turn_powerdown(game_state_t *game_state, bool turn_powerdown);

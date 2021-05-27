@@ -29,6 +29,7 @@ const double CUE_STICK_WIDTH = 400;
 const double CUE_STICK_HEIGHT = 10;
 const double CUE_STICK_MASS = INFINITY;
 const rgb_color_t WHITE_COLOR = {1, 1, 1, 1};
+const SDL_Color WHITE_COLOR_SDL = {255, 255, 255};
 const SDL_Color BLACK_COLOR = {0, 0, 0};
 const double TABLE_WIDTH = 800;
 const double TABLE_HEIGHT = 480;
@@ -45,11 +46,11 @@ const double BALL_ELASTICITY = 0.6;
 const double MU = 0.9;
 const double G = 15;
 const double DRAG_DIST = 2400;
-const double SLIDER_WIDTH = 30;
+const double SLIDER_WIDTH = 60;
 const double SLIDER_HEIGHT = 500;
 const double SLIDER_X = 250;
-const double BUTTON_WIDTH = 60;
-const double BUTTON_HEIGHT = 30;
+const double BUTTON_WIDTH = 100;
+const double BUTTON_HEIGHT = 35;
 const double BUTTON_Y = 230;
 const double DEFAULT_IMPULSE = 10;
 const double CUE_STICK_DEFAULT_Y = 177;
@@ -57,6 +58,7 @@ const vector_t VELOCITY_THRESHOLD = {0.5, 0.5};
 const double TINY_CONSTANT = 0.8;
 const double PULL_FACTOR_ADJUSTMENT_CONSTANT = 47;
 const double SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR = 1.265;
+const double POWER_TEXT_Y = 800;
 
 body_t *get_object(scene_t *scene, char *name){
     for (int i = 0; i < scene_bodies(scene); i++) {
@@ -254,7 +256,6 @@ void up_down_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
     vector_t table_centroid = body_get_centroid(get_object((scene_t *) aux, "POOL_TABLE"));
     if (y < table_centroid.y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS && y > table_centroid.y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS){
-        scene_t *scene = (scene_t *)aux;
         body_set_centroid(cue_ball, (vector_t) {body_get_centroid(cue_ball).x, y});
         vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
         body_set_centroid(cue_stick, cue_centroid);
@@ -437,7 +438,7 @@ void add_balls_powerup(scene_t *scene){
                 }
             }
         }
-        body_set_centroid(list_get(ball_list, i), (vector_t) {xcoord, ycoord});       
+        body_set_centroid(list_get(ball_list, i), (vector_t) {xcoord, ycoord});
     }
 
     int channel_num = 3;
@@ -478,19 +479,21 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             printf("rand: %f\n", power_rand);
             // if (power_rand > 0.8 && power_rand < 0.85){
             if (power_rand > 0 && power_rand < 0.25){
-                printf("check\n");
+                printf("add\n");
                 add_balls_powerup(scene);
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER UP: 4 extra balls are forced upon your opponent!", font);
             }
             else if (power_rand > 0.25 && power_rand < 0.5){
                 //powerup 2
+                printf("ghost\n");
                 add_ghost_powerup(scene, 0.0);
                 game_state_set_ghost_powerup(game_state, true);
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER UP: You can shoot through your opponent's balls!", font);
             }
             else if (power_rand > 0.5 && power_rand < 0.75){
+                printf("size\n");
                 // powerdown 1
                 add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
                 game_state_set_size_powerdown(game_state, true);
@@ -500,6 +503,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             else if (power_rand > 0.75){
                 // powerdown 2
                 switch_turn = true;
+                printf("switch\n");
                 change_text(scene, "POWER_TEXT", "POWER UP: Sorry, you may no longer play with your balls!", font);
             }
         }
@@ -675,7 +679,7 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                     && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
                     && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
                         //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
-                    if (game_state_get_first_turn(scene_get_game_state((scene_t *)aux))){
+                    if (game_state_get_first_turn(game_state)){
                         sdl_on_motion((motion_handler_t)up_down_handler, aux);
                     }
                     else {
@@ -734,7 +738,7 @@ void add_table(scene_t *scene) {
 
 void add_slider(scene_t *scene){
     list_t *slider_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *slider_image = IMG_Load("images/dark_slider.png");
+    SDL_Surface *slider_image = IMG_Load("images/slider_bg.png");
     body_t *slider = body_init_with_info(slider_list, INFINITY, (rgb_color_t) {0,0,0,1}, slider_image, SLIDER_WIDTH, SLIDER_HEIGHT, "SLIDER", NULL);//magic numbers
     body_set_centroid(slider, (vector_t) {SLIDER_X, HIGH_RIGHT_CORNER.y / 2});
     scene_add_body(scene, slider);
@@ -887,7 +891,7 @@ void add_initial_line(scene_t *scene){
 
 void add_text(scene_t *scene, TTF_Font *font){
     list_t *shape = list_init(0, free);
-    SDL_Surface *turn = TTF_RenderText_Solid(font, "Player One", BLACK_COLOR);
+    SDL_Surface *turn = TTF_RenderText_Solid(font, "Player 1", BLACK_COLOR);
     body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0, 1}, turn, 300, 100, "TURN_TEXT", NULL);
     vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 100};
     body_set_centroid(turn_text, turn_text_centroid);
@@ -909,8 +913,8 @@ void add_text(scene_t *scene, TTF_Font *font){
 
     list_t *shape3 = list_init(0, free);
     SDL_Surface *power = TTF_RenderText_Solid(font, "", BLACK_COLOR);
-    body_t *power_text = body_init_with_info(shape2, INFINITY, (rgb_color_t) {1, 0, 0, 1}, power, 1100, 100, "POWER_TEXT", NULL);
-    vector_t power_text_centroid = {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y - CUE_STICK_DEFAULT_Y};
+    body_t *power_text = body_init_with_info(shape3, INFINITY, (rgb_color_t) {1, 0, 0, 1}, power, 1100, 100, "POWER_TEXT", NULL);
+    vector_t power_text_centroid = {HIGH_RIGHT_CORNER.x / 2, POWER_TEXT_Y};
     body_set_centroid(power_text, power_text_centroid);
     scene_add_body(scene, power_text);
 }
@@ -994,8 +998,8 @@ int main(){
     scene_set_game_state(scene, game_state);
 
     TTF_Init();
-    TTF_Font* hemihead_font = TTF_OpenFont("fonts/HEMIHEAD.TTF", 100);
-    game_setup(scene, hemihead_font);
+    TTF_Font* font = TTF_OpenFont("fonts/BebasNeue-Regular.TTF", 100);
+    game_setup(scene, font);
 
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
     add_forces(scene);
@@ -1009,7 +1013,7 @@ int main(){
             vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball(scene)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
             body_set_centroid(get_cue_stick(scene), cue_centroid);
             body_set_origin(get_cue_stick(scene), body_get_centroid(get_cue_ball(scene)));
-            gameplay_handler(scene, hemihead_font);
+            gameplay_handler(scene, font);
         }
         if (game_state_get_winner(scene_get_game_state(scene)) != NULL) {
             // printf("winner: %s: \n", game_state_get_winner(scene_get_game_state(scene)));
