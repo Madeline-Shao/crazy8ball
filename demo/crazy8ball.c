@@ -477,26 +477,30 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             float power_rand = rand() / (float) RAND_MAX;
             printf("rand: %f\n", power_rand);
             // if (power_rand > 0.8 && power_rand < 0.85){
-            if (power_rand > 0.8 && power_rand < 0.85){
+            if (power_rand > 0 && power_rand < 0.25){
                 printf("check\n");
                 add_balls_powerup(scene);
                 applied_power = true;
+                change_text(scene, "POWER_TEXT", "POWER UP: 4 extra balls are forced upon your opponent!", font);
             }
-            else if (power_rand > 0.85 && power_rand < 0.9){
+            else if (power_rand > 0.25 && power_rand < 0.5){
                 //powerup 2
                 add_ghost_powerup(scene, 0.0);
                 game_state_set_ghost_powerup(game_state, true);
                 applied_power = true;
+                change_text(scene, "POWER_TEXT", "POWER UP: You can shoot through your opponent's balls!", font);
             }
-            else if (power_rand > 0.9 && power_rand < 0.95){
+            else if (power_rand > 0.5 && power_rand < 0.75){
                 // powerdown 1
                 add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
                 game_state_set_size_powerdown(game_state, true);
                 applied_power = true;
+                change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font);
             }
-            else if (power_rand > 0.95){
+            else if (power_rand > 0.75){
                 // powerdown 2
                 switch_turn = true;
+                change_text(scene, "POWER_TEXT", "POWER UP: Sorry, you may no longer play with your balls!", font);
             }
         }
 
@@ -584,10 +588,10 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
 
                     char type[45];
                     if (!strcmp(game_state_get_player_1_type(game_state), "SOLID_BALL")){
-                        snprintf(type, 45, "Player One: %s | Player Two: %s", "SOLID", "STRIPES");
+                        snprintf(type, 45, "Player 1: %s | Player 2: %s", "SOLID", "STRIPES");
                     }
                     else {
-                        snprintf(type, 45, "Player One: %s | Player Two: %s", "STRIPES", "SOLID");
+                        snprintf(type, 45, "Player 1: %s | Player 2: %s", "STRIPES", "SOLID");
                     }
                     change_text(scene, "TYPE_TEXT", type, font);
                     break;
@@ -602,20 +606,30 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         switch_turn = true;
     }
     if (switch_turn) {
+        if (game_state_get_balls_powerup(game_state)){
+            game_state_set_balls_powerup(game_state, false);
+            change_text(scene, "POWER_TEXT", "", font);
+        }
         if (game_state_get_ghost_powerup(game_state)){
             add_ghost_powerup(scene, BALL_MASS);
             game_state_set_ghost_powerup(game_state, false);
+            change_text(scene, "POWER_TEXT", "", font);
         }
         if (game_state_get_size_powerdown(game_state)){
             add_size_powerdown(scene, BALL_RADIUS);
             game_state_set_size_powerdown(game_state, false);
+            change_text(scene, "POWER_TEXT", "", font);
+        }
+        if (game_state_get_turn_powerdown(game_state)){
+            game_state_set_turn_powerdown(game_state, false);
+            change_text(scene, "POWER_TEXT", "", font);
         }
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
         if (game_state_get_curr_player_turn(game_state) == 1){
-            change_text(scene, "TURN_TEXT", "Player One", font);
+            change_text(scene, "TURN_TEXT", "Player 1", font);
         }
         else{
-            change_text(scene, "TURN_TEXT", "Player Two", font);
+            change_text(scene, "TURN_TEXT", "Player 2", font);
         }
     }
 
@@ -892,6 +906,13 @@ void add_text(scene_t *scene, TTF_Font *font){
     vector_t win_text_centroid = {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2};
     body_set_centroid(win_text, win_text_centroid);
     scene_add_body(scene, win_text);
+
+    list_t *shape3 = list_init(0, free);
+    SDL_Surface *power = TTF_RenderText_Solid(font, "", BLACK_COLOR);
+    body_t *power_text = body_init_with_info(shape2, INFINITY, (rgb_color_t) {1, 0, 0, 1}, power, 1100, 100, "POWER_TEXT", NULL);
+    vector_t power_text_centroid = {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y - CUE_STICK_DEFAULT_Y};
+    body_set_centroid(power_text, power_text_centroid);
+    scene_add_body(scene, power_text);
 }
 
 void add_background(scene_t *scene) {

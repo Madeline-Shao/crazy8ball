@@ -14,8 +14,10 @@ typedef struct game_state{
     bool end_of_turn;
     bool cue_ball_sunk;
     char *winner;
+    bool balls_powerup;
     bool ghost_powerup;
     bool size_powerdown;
+    bool turn_powerdown;
 } game_state_t;
 
 game_state_t *game_state_init(void){
@@ -30,8 +32,15 @@ game_state_t *game_state_init(void){
     new_game_state->balls_sunk = balls_sunk;
     new_game_state->cue_ball_sunk = false;
     new_game_state->winner = NULL;
+    new_game_state->balls_powerup = false;
     new_game_state->ghost_powerup = false;
+    new_game_state->size_powerdown = false;
+    new_game_state->turn_powerdown = false;
     return new_game_state;
+}
+
+bool game_state_get_balls_powerup(game_state_t *game_state){
+    return game_state->balls_powerup;
 }
 
 bool game_state_get_ghost_powerup(game_state_t *game_state){
@@ -40,6 +49,10 @@ bool game_state_get_ghost_powerup(game_state_t *game_state){
 
 bool game_state_get_size_powerdown(game_state_t *game_state){
     return game_state->size_powerdown;
+}
+
+bool game_state_get_turn_powerdown(game_state_t *game_state){
+    return game_state->turn_powerdown;
 }
 
 char *game_state_get_current_type(game_state_t *game_state){
@@ -111,10 +124,18 @@ void game_state_set_player_2_type(game_state_t *game_state, char *player_2_type)
     game_state->player_2_type = player_2_type;
 }
 
+void game_state_set_balls_powerup(game_state_t *game_state, bool balls_powerup){
+    game_state->balls_powerup = balls_powerup;
+}
+
 void game_state_set_ghost_powerup(game_state_t *game_state, bool ghost_powerup){
     game_state->ghost_powerup = ghost_powerup;
 }
 
 void game_state_set_size_powerdown(game_state_t *game_state, bool size_powerdown){
     game_state->size_powerdown = size_powerdown;
+}
+
+void game_state_set_turn_powerdown(game_state_t *game_state, bool turn_powerdown){
+    game_state->turn_powerdown = turn_powerdown;
 }
