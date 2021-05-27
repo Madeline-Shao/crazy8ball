@@ -148,6 +148,10 @@ void body_set_image(body_t *body, SDL_Surface *image) {
     body->image = image;
 }
 
+void body_set_mass(body_t *body, double mass){
+    body->mass = mass;
+}
+
 void body_set_centroid(body_t *body, vector_t x){
     polygon_translate(body->shape, vec_subtract(x, body->centroid));
     body->centroid = x;
@@ -177,6 +181,10 @@ void body_set_origin(body_t *body, vector_t origin){
     body->origin = origin;
 }
 
+void body_set_color(body_t *body, rgb_color_t color){
+    body->color = color;
+}
+
 void body_add_force(body_t *body, vector_t force){
     vector_t new_force = {body->force.x + force.x, body->force.y + force.y};
     body->force = new_force;
@@ -189,12 +197,19 @@ void body_add_impulse(body_t *body, vector_t impulse){
 
 void body_tick(body_t *body, double dt){
     // update acceleration
-    vector_t acceleration = vec_multiply(1 / body->mass, body->force);
+    vector_t acceleration = VEC_ZERO;
+    if(body->mass != 0.0){
+        acceleration = vec_multiply(1 / body->mass, body->force);
+    }
     // calculate new velocity from accel and impulse
 
     vector_t new_vel = vec_add(*(body->velocity), vec_multiply(dt, acceleration));
-    new_vel = vec_add(new_vel, vec_multiply(1 / body->mass, body->impulse));
-
+    if(body->mass != 0.0){
+        new_vel = vec_add(new_vel, vec_multiply(1 / body->mass, body->impulse));
+    }
+    else{
+        new_vel = VEC_ZERO;
+    }
     // translate by average of old and new velocity
     vector_t average = vec_multiply(0.5, vec_add(*(body->velocity), new_vel));
 

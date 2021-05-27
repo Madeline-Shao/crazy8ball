@@ -10,6 +10,7 @@ typedef struct rgb_color{
     float r;
     float g;
     float b;
+    float a;
 } rgb_color_t;
 
 #endif // #ifndef __COLOR_H__

@@ -121,6 +121,10 @@ double body_get_angle(body_t *body);
 
 void body_set_image(body_t *body, SDL_Surface *image);
 
+void body_set_mass(body_t *body, double mass);
+
+void body_set_color(body_t *body, rgb_color_t color);
+
 /**
  * Translates a body to a new position.
  * The position is specified by the position of the body's center of mass.

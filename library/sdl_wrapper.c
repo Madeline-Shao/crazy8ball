@@ -209,6 +209,7 @@ void sdl_draw_polygon(list_t *points, rgb_color_t color) {
     assert(0 <= color.r && color.r <= 1);
     assert(0 <= color.g && color.g <= 1);
     assert(0 <= color.b && color.b <= 1);
+    assert(0 <= color.a && color.a <= 1);
 
     vector_t window_center = get_window_center();
 
@@ -228,7 +229,7 @@ void sdl_draw_polygon(list_t *points, rgb_color_t color) {
     filledPolygonRGBA(
         renderer,
         x_points, y_points, n,
-        color.r * 255, color.g * 255, color.b * 255, 255
+        color.r * 255, color.g * 255, color.b * 255, color.a * 255
     );
     free(x_points);
     free(y_points);
@@ -263,6 +264,9 @@ void sdl_draw_sprite(body_t *body, scene_t *scene){
         boundary->h = body_get_height(body);
         if (!strcmp(body_get_info(body), "CUE_STICK")){
             SDL_RenderCopyEx(renderer, texture, NULL, boundary, body_get_angle(body) * 180 / M_PI, NULL, SDL_FLIP_NONE);
+        }
+        else if(body_get_mass(body) == 0){
+            sdl_draw_polygon(body_get_shape(body), body_get_color(body));
         }
         else{
             SDL_RenderCopy(renderer, texture, NULL, boundary);

@@ -14,6 +14,7 @@ typedef struct game_state{
     bool end_of_turn;
     bool cue_ball_sunk;
     char *winner;
+    bool ghost_powerup;
 } game_state_t;
 
 game_state_t *game_state_init(void){
@@ -28,9 +29,13 @@ game_state_t *game_state_init(void){
     new_game_state->balls_sunk = balls_sunk;
     new_game_state->cue_ball_sunk = false;
     new_game_state->winner = NULL;
+    new_game_state->ghost_powerup = false;
     return new_game_state;
 }
 
+bool game_state_get_ghost_powerup(game_state_t *game_state){
+    return game_state->ghost_powerup;
+}
 char *game_state_get_current_type(game_state_t *game_state){
     if (game_state->curr_player_turn == 1) {
         return game_state->player_1_type;
@@ -98,4 +103,8 @@ void game_state_set_player_1_type(game_state_t *game_state, char *player_1_type)
 
 void game_state_set_player_2_type(game_state_t *game_state, char *player_2_type){
     game_state->player_2_type = player_2_type;
+}
+
+void game_state_set_ghost_powerup(game_state_t *game_state, bool ghost_powerup){
+    game_state->ghost_powerup = ghost_powerup;
 }

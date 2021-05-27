@@ -28,7 +28,7 @@ const double NUM_BALLS  = 16;
 const double CUE_STICK_WIDTH = 400;
 const double CUE_STICK_HEIGHT = 10;
 const double CUE_STICK_MASS = INFINITY;
-const rgb_color_t WHITE_COLOR = {1, 1, 1};
+const rgb_color_t WHITE_COLOR = {1, 1, 1, 1};
 const SDL_Color BLACK_COLOR = {0, 0, 0};
 const double TABLE_WIDTH = 800;
 const double TABLE_HEIGHT = 480;
@@ -106,6 +106,8 @@ bool overlaps(double x, double y, vector_t centroid){
     return false;
 }
 
+
+
 void play_balls_colliding(int channel) {
     Mix_Chunk *balls_colliding = Mix_LoadWAV("sounds/balls_colliding.wav");
     Mix_PlayChannel(channel, balls_colliding, 0);
@@ -119,6 +121,35 @@ void play_cue_stick_ball(int channel) {
 void play_pocket(int channel) {
     Mix_Chunk *pocket = Mix_LoadWAV("sounds/pocket.wav");
     Mix_PlayChannel(channel, pocket, 0);
+}
+
+void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *aux){
+    int channel = *(int *)aux;
+    play_balls_colliding(channel);
+    double u1 = vec_dot(axis, body_get_velocity(body1));
+    double u2 = vec_dot(axis, body_get_velocity(body2));
+    double reduced_mass;
+    if (body_get_mass(body1) == INFINITY) {
+        reduced_mass = body_get_mass(body2);
+    }
+    else if (body_get_mass(body2) == INFINITY) {
+        reduced_mass = body_get_mass(body1);
+    }
+    else {
+        reduced_mass = (body_get_mass(body1) * body_get_mass(body2) / (body_get_mass(body1) + body_get_mass(body2)));
+    }
+    vector_t impulse = vec_multiply((reduced_mass * (1 + BALL_ELASTICITY) * (u2 - u1)), axis);
+    body_add_impulse(body1, impulse);
+    body_add_impulse(body2, vec_multiply(-1, impulse));
+}
+
+
+// SHE DID INDEED SAY THAT
+void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
+    play_pocket(2);
+    list_add(game_state_get_balls_sunk(scene_get_game_state((scene_t *) aux)), ball);
+    body_set_image(ball, NULL);
+    body_set_velocity(ball, (vector_t) {0, 0});
 }
 
 void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
@@ -321,8 +352,32 @@ body_t *create_ball(scene_t *scene, char *info, SDL_Surface *img){
     return ball;
 }
 
-void add_balls_powerup(scene_t *scene, char *info){
-    printf("fuck you little shit");
+void add_ghost_powerup(scene_t *scene, double mass){
+    char *opponent_type[13];
+
+    if(!strcmp(game_state_get_current_type(scene_get_game_state(scene)), "SOLID_BALL")){
+        snprintf(opponent_type, 13, "STRIPED_BALL");
+    }
+    else{
+        snprintf(opponent_type, 11, "SOLID_BALL");
+    }
+
+    for(size_t i = 0; i < scene_bodies(scene); i++){
+        body_t *body = scene_get_body(scene, i);
+        if(!strcmp(body_get_info(body), opponent_type)){
+            body_set_mass(body, mass);
+            if(mass == 0){
+                body_set_color(body, (rgb_color_t) {148 / 255, 148 / 255, 148 / 255, 0.5});
+            }
+            else{
+                body_set_color(body, WHITE_COLOR);
+            }
+        }
+    }
+
+}
+
+void add_balls_powerup(scene_t *scene){
     list_t *ball_list = list_init(4, (free_func_t) body_free);
 
     if (!strcmp(game_state_get_current_type(scene_get_game_state(scene)), "SOLID_BALL")){
@@ -330,7 +385,6 @@ void add_balls_powerup(scene_t *scene, char *info){
             SDL_Surface *image = IMG_Load("images/special_striped_ball.png");
             body_t *ball = create_ball(scene, "STRIPED_BALL", image);
             list_add(ball_list, ball);
-            scene_add_body(scene, ball);
         }
     }
     else {
@@ -338,7 +392,6 @@ void add_balls_powerup(scene_t *scene, char *info){
             SDL_Surface *image = IMG_Load("images/special_solid_ball.png");
             body_t *ball = create_ball(scene, "SOLID_BALL", image);
             list_add(ball_list, ball);
-            scene_add_body(scene, ball);
         }
     }
 
@@ -347,7 +400,7 @@ void add_balls_powerup(scene_t *scene, char *info){
     double maxy = body_get_centroid(get_object(scene, "POOL_TABLE")).y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS;
     double miny = body_get_centroid(get_object(scene, "POOL_TABLE")).y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS;
 
-    for (int i = 0; i < 4; i++){
+    for (int i = 0; i < list_size(ball_list); i++){
         int xcoord;
         int ycoord;
         bool brake = false;
@@ -361,12 +414,37 @@ void add_balls_powerup(scene_t *scene, char *info){
                     vector_t ball_centroid = body_get_centroid(body);
                     if (!overlaps(xcoord, ycoord, ball_centroid)) {
                         brake = true;
+                    }
+                    else{
+                        brake = false;
                         break;
                     }
                 }
             }
         }
-        body_set_centroid(list_get(ball_list, i), (vector_t) {xcoord, ycoord});
+        body_set_centroid(list_get(ball_list, i), (vector_t) {xcoord, ycoord});       
+    }
+
+    int channel_num = 3;
+    for (int i = 0; i < list_size(ball_list); i++){
+        body_t *ball = list_get(ball_list, i);
+        create_friction(scene, MU, G, ball);
+        for(int j = 0; j < scene_bodies(scene); j++){
+            body_t *body = scene_get_body(scene, j);
+            if(!strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "8_BALL") || !strcmp(body_get_info(body), "CUE_BALL") || !strcmp(body_get_info(body), "WALL")){
+                int *aux = malloc(sizeof(int));
+                *aux = channel_num;
+                create_collision(scene, ball, body, (collision_handler_t) balls_collision_handler, aux, NULL);
+                channel_num++;
+            }
+            else if(!strcmp(body_get_info(body), "HOLE")){
+                // int *aux = malloc(sizeof(int));
+                // *aux = channel_num;
+                create_collision(scene, ball, body, (collision_handler_t) ball_destroy, scene, NULL);
+                // channel_num++;
+            }
+        }
+        scene_add_body(scene, ball);
     }
 }
 
@@ -380,23 +458,19 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     list_t *balls_sunk = game_state_get_balls_sunk(game_state);
     bool applied_power = false;
     for (int i = 0; i < list_size(balls_sunk); i++) {
-        if (game_state_get_current_type(scene_get_game_state(scene)) != NULL) {
-            printf("hasdflkjskdfj");
-            if (!strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene))))
-                printf("ahahahaah");
-        }
-
         if (game_state_get_current_type(scene_get_game_state(scene)) != NULL && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene))) && !applied_power){
             float power_rand = rand() / (float) RAND_MAX;
             printf("rand: %f\n", power_rand);
             // if (power_rand > 0.8 && power_rand < 0.85){
-            if (power_rand > 0){
+            if (power_rand > 0.8 && power_rand < 0.85){
                 printf("check\n");
-                add_balls_powerup(scene, game_state_get_current_type(scene_get_game_state(scene)));
+                add_balls_powerup(scene);
                 applied_power = true;
             }
-            else if (power_rand > 0.85 && power_rand < 0.9){
+            else if (power_rand > 0){
                 //powerup 2
+                add_ghost_powerup(scene, 0.0);
+                game_state_set_ghost_powerup(game_state, true);
                 applied_power = true;
             }
             else if (power_rand > 0.9 && power_rand < 0.95){
@@ -512,6 +586,10 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         switch_turn = true;
     }
     if (switch_turn) {
+        if(game_state_get_ghost_powerup(game_state)){
+            add_ghost_powerup(scene, BALL_MASS);
+            game_state_set_ghost_powerup(game_state, false);
+        }
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
         if(game_state_get_curr_player_turn(game_state) == 1){
             change_text(scene, "TURN_TEXT", "Player One", font);
@@ -605,7 +683,7 @@ list_t *rect_init(double width, double height) {
 void add_stick(scene_t * scene) {
     list_t *stick_shape = rect_init(CUE_STICK_WIDTH, CUE_STICK_HEIGHT);
     SDL_Surface *ball_image = IMG_Load("images/cue_stick.png");
-    body_t *cue_stick = body_init_with_info(stick_shape, CUE_STICK_MASS, (rgb_color_t) {1, 0, 0}, ball_image, CUE_STICK_WIDTH, CUE_STICK_HEIGHT, "CUE_STICK", NULL);
+    body_t *cue_stick = body_init_with_info(stick_shape, CUE_STICK_MASS, (rgb_color_t) {1, 0, 0, 1}, ball_image, CUE_STICK_WIDTH, CUE_STICK_HEIGHT, "CUE_STICK", NULL);
     vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball(scene)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
     body_set_centroid(cue_stick, cue_centroid);
     body_set_origin(cue_stick, body_get_centroid(get_cue_ball(scene)));
@@ -615,7 +693,7 @@ void add_stick(scene_t * scene) {
 void add_table(scene_t *scene) {
     list_t *rect = rect_init(1000, 600);
     SDL_Surface *table_image = IMG_Load("images/pool_table.png");
-    body_t *pool_table = body_init_with_info(rect, TABLE_MASS, (rgb_color_t) {0,0,0}, table_image, TABLE_WIDTH, TABLE_HEIGHT, "POOL_TABLE", NULL);//magic numbers
+    body_t *pool_table = body_init_with_info(rect, TABLE_MASS, (rgb_color_t) {0,0,0,1}, table_image, TABLE_WIDTH, TABLE_HEIGHT, "POOL_TABLE", NULL);//magic numbers
     body_set_centroid(pool_table, (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2});
     scene_add_body(scene, pool_table);
 }
@@ -623,13 +701,13 @@ void add_table(scene_t *scene) {
 void add_slider(scene_t *scene){
     list_t *slider_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
     SDL_Surface *slider_image = IMG_Load("images/dark_slider.png");
-    body_t *slider = body_init_with_info(slider_list, INFINITY, (rgb_color_t) {0,0,0}, slider_image, SLIDER_WIDTH, SLIDER_HEIGHT, "SLIDER", NULL);//magic numbers
+    body_t *slider = body_init_with_info(slider_list, INFINITY, (rgb_color_t) {0,0,0,1}, slider_image, SLIDER_WIDTH, SLIDER_HEIGHT, "SLIDER", NULL);//magic numbers
     body_set_centroid(slider, (vector_t) {SLIDER_X, HIGH_RIGHT_CORNER.y / 2});
     scene_add_body(scene, slider);
 
     list_t *button_list = rect_init(BUTTON_WIDTH, BUTTON_HEIGHT);
     SDL_Surface *button_image = IMG_Load("images/light_slider.png");
-    body_t *button = body_init_with_info(button_list, INFINITY, (rgb_color_t) {0,0,0}, button_image, BUTTON_WIDTH, BUTTON_HEIGHT, "BUTTON", NULL);//magic numbers
+    body_t *button = body_init_with_info(button_list, INFINITY, (rgb_color_t) {0,0,0,1}, button_image, BUTTON_WIDTH, BUTTON_HEIGHT, "BUTTON", NULL);//magic numbers
     body_set_centroid(button, (vector_t) {SLIDER_X, BUTTON_Y});
     scene_add_body(scene, button);
 }
@@ -687,26 +765,26 @@ void add_walls(scene_t *scene) {
     double wall_width = (TABLE_WIDTH - WALL_TABLE_WIDTH_DIFF) / 2 - WALL_GAP - BREEZY_CONSTANT;
 
     list_t *wall_shape_top1 = rect_init(wall_width, WALL_THICKNESS);
-    body_t *wall_top1 = body_init_with_info(wall_shape_top1, WALL_MASS, (rgb_color_t){0, 1, 0}, NULL, wall_width, WALL_THICKNESS, "WALL", NULL);
+    body_t *wall_top1 = body_init_with_info(wall_shape_top1, WALL_MASS, (rgb_color_t){0, 1, 0, 1}, NULL, wall_width, WALL_THICKNESS, "WALL", NULL);
     vector_t wall_centroid_top1 = vec_add(body_get_centroid(wall_top1), (vector_t) {HIGH_RIGHT_CORNER.x / 2 - wall_width / 2 - WALL_GAP, HIGH_RIGHT_CORNER.y / 2 + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS});
     body_set_centroid(wall_top1, wall_centroid_top1);
     scene_add_body(scene, wall_top1);
 
     list_t *wall_shape_top2 = rect_init(wall_width, WALL_THICKNESS);
-    body_t *wall_top2 = body_init_with_info(wall_shape_top2, WALL_MASS, (rgb_color_t){0, 1, 0}, NULL, wall_width, WALL_THICKNESS, "WALL", NULL);
+    body_t *wall_top2 = body_init_with_info(wall_shape_top2, WALL_MASS, (rgb_color_t){0, 1, 0, 1}, NULL, wall_width, WALL_THICKNESS, "WALL", NULL);
     vector_t wall_centroid_top2 = vec_add(body_get_centroid(wall_top2), (vector_t) {HIGH_RIGHT_CORNER.x / 2 + wall_width / 2 + WALL_GAP, HIGH_RIGHT_CORNER.y / 2 + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS});
     body_set_centroid(wall_top2, wall_centroid_top2);
     scene_add_body(scene, wall_top2);
 
     //bottom wall
     list_t *wall_shape_bot1 = rect_init(wall_width, WALL_THICKNESS);
-    body_t *wall_bot1 = body_init_with_info(wall_shape_bot1, WALL_MASS, (rgb_color_t){0, 1, 0}, NULL, wall_width, WALL_THICKNESS, "WALL", NULL);
+    body_t *wall_bot1 = body_init_with_info(wall_shape_bot1, WALL_MASS, (rgb_color_t){0, 1, 0, 1}, NULL, wall_width, WALL_THICKNESS, "WALL", NULL);
     vector_t wall_centroid_bot1 = vec_add(body_get_centroid(wall_bot1), (vector_t) {HIGH_RIGHT_CORNER.x / 2 - wall_width / 2 - WALL_GAP, HIGH_RIGHT_CORNER.y / 2 - TABLE_HEIGHT / 2 + TABLE_WALL_THICKNESS});
     body_set_centroid(wall_bot1, wall_centroid_bot1);
     scene_add_body(scene, wall_bot1);
 
     list_t *wall_shape_bot2 = rect_init(wall_width, WALL_THICKNESS);
-    body_t *wall_bot2 = body_init_with_info(wall_shape_bot2, WALL_MASS, (rgb_color_t){0, 1, 0}, NULL, wall_width, WALL_THICKNESS, "WALL", NULL);
+    body_t *wall_bot2 = body_init_with_info(wall_shape_bot2, WALL_MASS, (rgb_color_t){0, 1, 0, 1}, NULL, wall_width, WALL_THICKNESS, "WALL", NULL);
     vector_t wall_centroid_bot2 = vec_add(body_get_centroid(wall_bot2), (vector_t) {HIGH_RIGHT_CORNER.x / 2 + wall_width / 2 + WALL_GAP, HIGH_RIGHT_CORNER.y / 2 - TABLE_HEIGHT / 2 + TABLE_WALL_THICKNESS});
     body_set_centroid(wall_bot2, wall_centroid_bot2);
     scene_add_body(scene, wall_bot2);
@@ -714,13 +792,13 @@ void add_walls(scene_t *scene) {
     //right wall
     double wall_height = TABLE_HEIGHT - WALL_TABLE_WIDTH_DIFF - BREEZY_CONSTANT;
     list_t *wall_shape_right = rect_init(WALL_THICKNESS, wall_height);
-    body_t *wall_right = body_init_with_info(wall_shape_right, WALL_MASS, (rgb_color_t){0, 1, 0}, NULL, WALL_THICKNESS, wall_height, "WALL", NULL);
+    body_t *wall_right = body_init_with_info(wall_shape_right, WALL_MASS, (rgb_color_t){0, 1, 0, 1}, NULL, WALL_THICKNESS, wall_height, "WALL", NULL);
     vector_t wall_centroid_right = vec_add(body_get_centroid(wall_right), (vector_t) {HIGH_RIGHT_CORNER.x / 2 + TABLE_WIDTH / 2 - TABLE_WALL_THICKNESS, HIGH_RIGHT_CORNER.y / 2});
     body_set_centroid(wall_right, wall_centroid_right);
     scene_add_body(scene, wall_right);
     //left wall
     list_t *wall_shape_left = rect_init(WALL_THICKNESS, wall_height);
-    body_t *wall_left = body_init_with_info(wall_shape_left, WALL_MASS, (rgb_color_t){0, 1, 0}, NULL, WALL_THICKNESS, wall_height, "WALL", NULL);
+    body_t *wall_left = body_init_with_info(wall_shape_left, WALL_MASS, (rgb_color_t){0, 1, 0, 1}, NULL, WALL_THICKNESS, wall_height, "WALL", NULL);
     vector_t wall_centroid_left = vec_add(body_get_centroid(wall_left), (vector_t) {HIGH_RIGHT_CORNER.x / 2 - TABLE_WIDTH / 2 + TABLE_WALL_THICKNESS, HIGH_RIGHT_CORNER.y / 2});
     body_set_centroid(wall_left, wall_centroid_left);
     scene_add_body(scene, wall_left);
@@ -728,37 +806,37 @@ void add_walls(scene_t *scene) {
 
 void add_holes(scene_t *scene){
     list_t *hole_shape1 = circle_init(HOLE_RADIUS);
-    body_t *hole_top1 = body_init_with_info(hole_shape1, INFINITY, (rgb_color_t){1, 0, 0}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
+    body_t *hole_top1 = body_init_with_info(hole_shape1, INFINITY, (rgb_color_t){1, 0, 0, 1}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
     vector_t hole_centroid_top1 = (vector_t) {HIGH_RIGHT_CORNER.x / 2 - TABLE_WIDTH / 2 + HOLE_CONSTANT, HIGH_RIGHT_CORNER.y / 2 + TABLE_HEIGHT / 2 - HOLE_CONSTANT};
     body_set_centroid(hole_top1, hole_centroid_top1);
     scene_add_body(scene, hole_top1);
 
     list_t *hole_shape2 = circle_init(HOLE_RADIUS);
-    body_t *hole_top2 = body_init_with_info(hole_shape2, INFINITY, (rgb_color_t){1, 0, 0}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
+    body_t *hole_top2 = body_init_with_info(hole_shape2, INFINITY, (rgb_color_t){1, 0, 0, 1}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
     vector_t hole_centroid_top2 = (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2 + TABLE_HEIGHT / 2 - HOLE_CONSTANT + CORRECTION_CONSTANT};
     body_set_centroid(hole_top2, hole_centroid_top2);
     scene_add_body(scene, hole_top2);
 
     list_t *hole_shape3 = circle_init(HOLE_RADIUS);
-    body_t *hole_top3 = body_init_with_info(hole_shape3, INFINITY, (rgb_color_t){1, 0, 0}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
+    body_t *hole_top3 = body_init_with_info(hole_shape3, INFINITY, (rgb_color_t){1, 0, 0, 1}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
     vector_t hole_centroid_top3 = (vector_t) {HIGH_RIGHT_CORNER.x / 2 + TABLE_WIDTH / 2 - HOLE_CONSTANT, HIGH_RIGHT_CORNER.y / 2 + TABLE_HEIGHT / 2 - HOLE_CONSTANT};
     body_set_centroid(hole_top3, hole_centroid_top3);
     scene_add_body(scene, hole_top3);
 
     list_t *hole_shape4 = circle_init(HOLE_RADIUS);
-    body_t *hole_top4 = body_init_with_info(hole_shape4, INFINITY, (rgb_color_t){1, 0, 0}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
+    body_t *hole_top4 = body_init_with_info(hole_shape4, INFINITY, (rgb_color_t){1, 0, 0, 1}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
     vector_t hole_centroid_top4 = (vector_t) {HIGH_RIGHT_CORNER.x / 2 - TABLE_WIDTH / 2 + HOLE_CONSTANT, HIGH_RIGHT_CORNER.y / 2 - TABLE_HEIGHT / 2 + HOLE_CONSTANT};
     body_set_centroid(hole_top4, hole_centroid_top4);
     scene_add_body(scene, hole_top4);
 
     list_t *hole_shape5 = circle_init(HOLE_RADIUS);
-    body_t *hole_top5 = body_init_with_info(hole_shape5, INFINITY, (rgb_color_t){1, 0, 0}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
+    body_t *hole_top5 = body_init_with_info(hole_shape5, INFINITY, (rgb_color_t){1, 0, 0, 1}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
     vector_t hole_centroid_top5 = (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2 - TABLE_HEIGHT / 2 + HOLE_CONSTANT - CORRECTION_CONSTANT};
     body_set_centroid(hole_top5, hole_centroid_top5);
     scene_add_body(scene, hole_top5);
 
     list_t *hole_shape6 = circle_init(HOLE_RADIUS);
-    body_t *hole_top6 = body_init_with_info(hole_shape6, INFINITY, (rgb_color_t){1, 0, 0}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
+    body_t *hole_top6 = body_init_with_info(hole_shape6, INFINITY, (rgb_color_t){1, 0, 0, 1}, NULL, HOLE_RADIUS * 2, HOLE_RADIUS * 2, "HOLE", NULL);
     vector_t hole_centroid_top6 = (vector_t) {HIGH_RIGHT_CORNER.x / 2 + TABLE_WIDTH / 2 - HOLE_CONSTANT, HIGH_RIGHT_CORNER.y / 2 - TABLE_HEIGHT / 2 + HOLE_CONSTANT};
     body_set_centroid(hole_top6, hole_centroid_top6);
     scene_add_body(scene, hole_top6);
@@ -776,21 +854,21 @@ void add_initial_line(scene_t *scene){
 void add_text(scene_t *scene, TTF_Font *font){
     list_t *shape = list_init(0, free);
     SDL_Surface *turn = TTF_RenderText_Solid(font, "Player One", BLACK_COLOR);
-    body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0}, turn, 300, 100, "TURN_TEXT", NULL);
+    body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0, 1}, turn, 300, 100, "TURN_TEXT", NULL);
     vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 100};
     body_set_centroid(turn_text, turn_text_centroid);
     scene_add_body(scene, turn_text);
 
     list_t *shape1 = list_init(0, free);
     SDL_Surface *type = TTF_RenderText_Solid(font, "", BLACK_COLOR);
-    body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0}, type, 700, 100, "TYPE_TEXT", NULL);
+    body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0, 1}, type, 700, 100, "TYPE_TEXT", NULL);
     vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 100};
     body_set_centroid(type_text, type_text_centroid);
     scene_add_body(scene, type_text);
 
     list_t *shape2 = list_init(0, free);
     SDL_Surface *win = TTF_RenderText_Solid(font, "", BLACK_COLOR);
-    body_t *win_text = body_init_with_info(shape2, INFINITY, (rgb_color_t) {1, 0, 0}, win, 700, 100, "WIN_TEXT", NULL);
+    body_t *win_text = body_init_with_info(shape2, INFINITY, (rgb_color_t) {1, 0, 0, 1}, win, 700, 100, "WIN_TEXT", NULL);
     vector_t win_text_centroid = {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2};
     body_set_centroid(win_text, win_text_centroid);
     scene_add_body(scene, win_text);
@@ -799,7 +877,7 @@ void add_text(scene_t *scene, TTF_Font *font){
 void add_background(scene_t *scene) {
     list_t *bg_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
     SDL_Surface *bg_image = IMG_Load("images/background.jpg");
-    body_t *bg = body_init_with_info(bg_list, INFINITY, (rgb_color_t) {0,0,0}, bg_image, HIGH_RIGHT_CORNER.x, HIGH_RIGHT_CORNER.y, "BACKGROUND", NULL);//magic numbers
+    body_t *bg = body_init_with_info(bg_list, INFINITY, (rgb_color_t) {0,0,0,1}, bg_image, HIGH_RIGHT_CORNER.x, HIGH_RIGHT_CORNER.y, "BACKGROUND", NULL);//magic numbers
     body_set_centroid(bg, (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2});
     scene_add_body(scene, bg);
 }
@@ -825,37 +903,7 @@ void game_setup(scene_t *scene, TTF_Font *font){
     sound_setup();
 }
 
-// SHE DID INDEED SAY THAT
-void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
-    play_pocket(2);
-    list_add(game_state_get_balls_sunk(scene_get_game_state((scene_t *) aux)), ball);
-    body_set_image(ball, NULL);
-    body_set_velocity(ball, (vector_t) {0, 0});
-}
 
-void collision_handler (body_t *body1, body_t *body2, vector_t axis, void *aux) {
-    double u1 = vec_dot(axis, body_get_velocity(body1));
-    double u2 = vec_dot(axis, body_get_velocity(body2));
-    double reduced_mass;
-    if (body_get_mass(body1) == INFINITY) {
-        reduced_mass = body_get_mass(body2);
-    }
-    else if (body_get_mass(body2) == INFINITY) {
-        reduced_mass = body_get_mass(body1);
-    }
-    else {
-        reduced_mass = (body_get_mass(body1) * body_get_mass(body2) / (body_get_mass(body1) + body_get_mass(body2)));
-    }
-    vector_t impulse = vec_multiply((reduced_mass * (1 + BALL_ELASTICITY) * (u2 - u1)), axis);
-    body_add_impulse(body1, impulse);
-    body_add_impulse(body2, vec_multiply(-1, impulse));
-}
-
-void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *aux){
-    int channel = *(int *)aux;
-    play_balls_colliding(channel);
-    collision_handler(body1, body2, axis, aux);
-}
 
 void add_forces(scene_t *scene){
     int channel_num = 3;
