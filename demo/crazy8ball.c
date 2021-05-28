@@ -65,6 +65,7 @@ const double PLAY_BUTTON_X = 550;
 const double INFO_BUTTON_X = 950;
 const double QUIT_BUTTON_Y = 650;
 const vector_t QUIT_BUTTON_CENTROID = {1470, 50};
+const vector_t HELP_BUTTON_CENTROID = {1400, 50};
 const double QUIT_BUTTON_SIDE_LENGTH = 50;
 
 body_t *get_object(scene_t *scene, char *name){
@@ -693,7 +694,7 @@ void add_instructions(scene_t *scene){
     body_set_centroid(instr, (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2});
     scene_add_body(scene, instr);
 
-    // instructions quit button
+    // instructions back button
     list_t *instr_quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
     SDL_Surface *instr_quit_image = IMG_Load("images/play-button.png");
     body_t *instr_quit_button = body_init_with_info(instr_quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_quit_image, START_MENU_BUTTON_SIDE_LENGTH, START_MENU_BUTTON_SIDE_LENGTH, "INSTR_QUIT", NULL);
@@ -1001,11 +1002,11 @@ void add_start_menu(scene_t *scene, TTF_Font *font) {
     scene_add_body(scene, info_button);
 
     // quit button
-    list_t *quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *quit_image = IMG_Load("images/back-button.png");
-    body_t *quit_button = body_init_with_info(quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, quit_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "QUIT_BUTTON", NULL);
-    body_set_centroid(quit_button, QUIT_BUTTON_CENTROID);
-    scene_add_body(scene, quit_button);
+    // list_t *quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    // SDL_Surface *quit_image = IMG_Load("images/back-button.png");
+    // body_t *quit_button = body_init_with_info(quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, quit_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "QUIT_BUTTON", NULL);
+    // body_set_centroid(quit_button, QUIT_BUTTON_CENTROID);
+    // scene_add_body(scene, quit_button);
 
     // title text
     list_t *shape = list_init(0, free);
@@ -1014,6 +1015,22 @@ void add_start_menu(scene_t *scene, TTF_Font *font) {
     vector_t title_text_centroid = {HIGH_RIGHT_CORNER.x / 2, TITLE_TEXT_Y};
     body_set_centroid(title_text, title_text_centroid);
     scene_add_body(scene, title_text);
+}
+
+void add_in_game_buttons(scene_t *scene){
+    // help button
+    list_t *instr_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    SDL_Surface *instr_image = IMG_Load("images/help-button.png");
+    body_t *instr = body_init_with_info(instr_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "INSTRUCTIONS", NULL);//magic numbers
+    body_set_centroid(instr, HELP_BUTTON_CENTROID);
+    scene_add_body(scene, instr);
+
+    // quit button
+    list_t *quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    SDL_Surface *quit_image = IMG_Load("images/back-button.png");
+    body_t *quit_button = body_init_with_info(quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, quit_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "QUIT_BUTTON", NULL);
+    body_set_centroid(quit_button, QUIT_BUTTON_CENTROID);
+    scene_add_body(scene, quit_button);
 }
 
 void add_background(scene_t *scene) {
@@ -1042,10 +1059,10 @@ void game_setup(scene_t *scene, TTF_Font *font){
     add_holes(scene);
     add_slider(scene);
     add_text(scene, font);
+    add_in_game_buttons(scene);
     add_start_menu(scene, font);
     sound_setup();
 }
-
 
 void add_forces(scene_t *scene){
     int channel_num = 3;
