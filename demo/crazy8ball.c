@@ -706,15 +706,33 @@ void add_instructions(scene_t *scene){
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
     if (key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) == NULL) {
         if (type == MOUSE_DOWN) {
-            // quit button
-            if(x >= QUIT_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
+            if(game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))){
+                    if (x >= HIGH_RIGHT_CORNER.x / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && x <= HIGH_RIGHT_CORNER.x / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && y >= POWER_TEXT_Y - START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && y <= POWER_TEXT_Y + START_MENU_BUTTON_SIDE_LENGTH / 2){
+                        body_remove(get_object((scene_t *) aux, "INSTRUCTIONS"));
+                        body_remove(get_object((scene_t *) aux, "INSTR_QUIT"));
+                        game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), false);
+                    }
+                }
+            if (game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
+                if (x >= QUIT_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
                 && x <= QUIT_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
                 && y >= QUIT_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
                 && y <= QUIT_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
                     game_state_set_game_quit(scene_get_game_state((scene_t *)aux), true);
+                }
+                else if (x >= HELP_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
+                && x <= HELP_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
+                && y >= HELP_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
+                && y <= HELP_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
+                    add_instructions((scene_t *)aux);
+                    game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
+                }
             }
-            else if(!game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
-                if(x >= PLAY_BUTTON_X - START_MENU_BUTTON_SIDE_LENGTH / 2
+            else if (!game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
+                if (x >= PLAY_BUTTON_X - START_MENU_BUTTON_SIDE_LENGTH / 2
                     && x <= PLAY_BUTTON_X + START_MENU_BUTTON_SIDE_LENGTH / 2
                     && y >= HIGH_RIGHT_CORNER.y / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
                     && y <= HIGH_RIGHT_CORNER.y / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2){
@@ -731,16 +749,6 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                         add_instructions((scene_t *)aux);
                         game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
                     }
-                else if(game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))){
-                    if (x >= HIGH_RIGHT_CORNER.x / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
-                    && x <= HIGH_RIGHT_CORNER.x / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2
-                    && y >= POWER_TEXT_Y - START_MENU_BUTTON_SIDE_LENGTH / 2
-                    && y <= POWER_TEXT_Y + START_MENU_BUTTON_SIDE_LENGTH / 2){
-                        body_remove(get_object((scene_t *) aux, "INSTRUCTIONS"));
-                        body_remove(get_object((scene_t *) aux, "INSTR_QUIT"));
-                        game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), false);
-                    }
-                }
             }
             else if(is_balls_stopped((scene_t *) aux)){
                 body_t *button = get_object((scene_t *) aux, "BUTTON");
