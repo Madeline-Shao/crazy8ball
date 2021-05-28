@@ -19,6 +19,7 @@ typedef struct game_state{
     bool size_powerdown;
     bool turn_powerdown;
     bool game_start;
+    bool game_instructions;
     bool game_quit;
 } game_state_t;
 
@@ -45,6 +46,10 @@ game_state_t *game_state_init(void){
 
 bool game_state_get_game_quit(game_state_t *game_state){
     return game_state->game_quit;
+}
+
+bool game_state_get_game_instructions(game_state_t *game_state){
+    return game_state->game_instructions;
 }
 
 bool game_state_get_game_start(game_state_t *game_state){
@@ -154,6 +159,10 @@ void game_state_set_turn_powerdown(game_state_t *game_state, bool turn_powerdown
 
 void game_state_set_game_start(game_state_t *game_state, bool game_start){
     game_state->game_start = game_start;
+}
+
+void game_state_set_game_instructions(game_state_t *game_state, bool val){
+    game_state->game_instructions = val;
 }
 
 void game_state_set_game_quit(game_state_t *game_state, bool game_quit){

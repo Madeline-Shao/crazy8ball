@@ -667,6 +667,40 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     // }
 }
 
+list_t *rect_init(double width, double height) {
+    vector_t half_width  = {.x = width / 2, .y = 0.0},
+             half_height = {.x = 0.0, .y = height / 2};
+    list_t *rect = list_init(4, free);
+    vector_t *v = malloc(sizeof(*v));
+    *v = vec_add(half_width, half_height);
+    list_add(rect, v);
+    v = malloc(sizeof(*v));
+    *v = vec_subtract(half_height, half_width);
+    list_add(rect, v);
+    v = malloc(sizeof(*v));
+    *v = vec_negate(*(vector_t *) list_get(rect, 0));
+    list_add(rect, v);
+    v = malloc(sizeof(*v));
+    *v = vec_subtract(half_width, half_height);
+    list_add(rect, v);
+    return rect;
+}
+
+void add_instructions(scene_t *scene){
+    list_t *instr_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    SDL_Surface *instr_image = IMG_Load("images/carpet-background.png");
+    body_t *instr = body_init_with_info(instr_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_image, HIGH_RIGHT_CORNER.x, HIGH_RIGHT_CORNER.y, "INSTRUCTIONS", NULL);//magic numbers
+    body_set_centroid(instr, (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2});
+    scene_add_body(scene, instr);
+
+    // instructions quit button
+    list_t *instr_quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    SDL_Surface *instr_quit_image = IMG_Load("images/play-button.png");
+    body_t *instr_quit_button = body_init_with_info(instr_quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_quit_image, START_MENU_BUTTON_SIDE_LENGTH, START_MENU_BUTTON_SIDE_LENGTH, "INSTR_QUIT", NULL);
+    body_set_centroid(instr_quit_button, (vector_t) {HIGH_RIGHT_CORNER.x / 2, POWER_TEXT_Y});
+    scene_add_body(scene, instr_quit_button);
+}
+
 // stick rotation
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
     if (key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) == NULL) {
@@ -689,7 +723,24 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                         body_remove(get_object((scene_t *) aux, "TITLE_TEXT"));
                         game_state_set_game_start(scene_get_game_state((scene_t *)aux), true);
                     }
+                else if (x >= INFO_BUTTON_X - START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && x <= INFO_BUTTON_X + START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && y >= HIGH_RIGHT_CORNER.y / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && y <= HIGH_RIGHT_CORNER.y / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2){
+                        add_instructions((scene_t *)aux);
+                        game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
+                    }
+                else if(game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))){
+                    if (x >= HIGH_RIGHT_CORNER.x / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && x <= HIGH_RIGHT_CORNER.x / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && y >= POWER_TEXT_Y - START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && y <= POWER_TEXT_Y + START_MENU_BUTTON_SIDE_LENGTH / 2){
+                        body_remove(get_object((scene_t *) aux, "INSTRUCTIONS"));
+                        body_remove(get_object((scene_t *) aux, "INSTR_QUIT"));
+                        game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), false);
+                    }
                 }
+            }
             else if(is_balls_stopped((scene_t *) aux)){
                 body_t *button = get_object((scene_t *) aux, "BUTTON");
                 body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
@@ -724,25 +775,6 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
             shoot_handler(y, aux);
         }
     }
-}
-
-list_t *rect_init(double width, double height) {
-    vector_t half_width  = {.x = width / 2, .y = 0.0},
-             half_height = {.x = 0.0, .y = height / 2};
-    list_t *rect = list_init(4, free);
-    vector_t *v = malloc(sizeof(*v));
-    *v = vec_add(half_width, half_height);
-    list_add(rect, v);
-    v = malloc(sizeof(*v));
-    *v = vec_subtract(half_height, half_width);
-    list_add(rect, v);
-    v = malloc(sizeof(*v));
-    *v = vec_negate(*(vector_t *) list_get(rect, 0));
-    list_add(rect, v);
-    v = malloc(sizeof(*v));
-    *v = vec_subtract(half_width, half_height);
-    list_add(rect, v);
-    return rect;
 }
 
 void add_stick(scene_t * scene) {
