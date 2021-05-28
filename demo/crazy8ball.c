@@ -961,14 +961,14 @@ void add_text(scene_t *scene, TTF_Font *font){
     list_t *shape = list_init(0, free);
     SDL_Surface *turn = TTF_RenderText_Solid(font, "Player 1", WHITE_COLOR_SDL);
     body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0, 1}, turn, 300, 100, "TURN_TEXT", NULL);
-    vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 100};
+    vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 120};
     body_set_centroid(turn_text, turn_text_centroid);
     scene_add_body(scene, turn_text);
 
     list_t *shape1 = list_init(0, free);
     SDL_Surface *type = TTF_RenderText_Solid(font, "", WHITE_COLOR_SDL);
     body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0, 1}, type, 700, 100, "TYPE_TEXT", NULL);
-    vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 100};
+    vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 120};
     body_set_centroid(type_text, type_text_centroid);
     scene_add_body(scene, type_text);
 
