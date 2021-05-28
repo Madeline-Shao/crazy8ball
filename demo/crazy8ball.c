@@ -730,8 +730,35 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                     add_instructions((scene_t *)aux);
                     game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
                 }
+                if(is_balls_stopped((scene_t *) aux)){
+                    body_t *button = get_object((scene_t *) aux, "BUTTON");
+                    body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
+                    game_state_t *game_state = scene_get_game_state((scene_t *) aux);
+                    if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
+                        && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
+                        && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
+                        && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
+                            sdl_on_motion((motion_handler_t)slider_handler, aux);
+                    }
+                // click on cue ball
+                    else if (x >= body_get_centroid(cue_ball).x - BALL_RADIUS
+                        && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
+                        && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
+                        && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
+                            //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
+                        if (game_state_get_first_turn(game_state)){
+                            sdl_on_motion((motion_handler_t)up_down_handler, aux);
+                        }
+                        else {
+                            sdl_on_motion((motion_handler_t)cue_ball_handler, aux);
+                        }
+                    }
+                    else{
+                        sdl_on_motion((motion_handler_t)rotation_handler, aux);
+                    }
+                }
             }
-            else if (!game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
+            if (!game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
                 if (x >= PLAY_BUTTON_X - START_MENU_BUTTON_SIDE_LENGTH / 2
                     && x <= PLAY_BUTTON_X + START_MENU_BUTTON_SIDE_LENGTH / 2
                     && y >= HIGH_RIGHT_CORNER.y / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
@@ -749,33 +776,6 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                         add_instructions((scene_t *)aux);
                         game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
                     }
-            }
-            else if(is_balls_stopped((scene_t *) aux)){
-                body_t *button = get_object((scene_t *) aux, "BUTTON");
-                body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
-                game_state_t *game_state = scene_get_game_state((scene_t *) aux);
-                if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
-                    && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
-                    && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
-                    && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
-                    sdl_on_motion((motion_handler_t)slider_handler, aux);
-                }
-                // click on cue ball
-                else if (x >= body_get_centroid(cue_ball).x - BALL_RADIUS
-                    && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
-                    && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
-                    && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
-                        //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
-                    if (game_state_get_first_turn(game_state)){
-                        sdl_on_motion((motion_handler_t)up_down_handler, aux);
-                    }
-                    else {
-                        sdl_on_motion((motion_handler_t)cue_ball_handler, aux);
-                    }
-                }
-                else{
-                    sdl_on_motion((motion_handler_t)rotation_handler, aux);
-                }
             }
         }
         if (type == MOUSE_UP) {
