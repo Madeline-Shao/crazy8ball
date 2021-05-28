@@ -18,6 +18,8 @@ typedef struct game_state{
     bool ghost_powerup;
     bool size_powerdown;
     bool turn_powerdown;
+    bool game_start;
+    bool game_quit;
 } game_state_t;
 
 game_state_t *game_state_init(void){
@@ -36,7 +38,17 @@ game_state_t *game_state_init(void){
     new_game_state->ghost_powerup = false;
     new_game_state->size_powerdown = false;
     new_game_state->turn_powerdown = false;
+    new_game_state->game_start = false;
+    new_game_state->game_quit = false;
     return new_game_state;
+}
+
+bool game_state_get_game_quit(game_state_t *game_state){
+    return game_state->game_quit;
+}
+
+bool game_state_get_game_start(game_state_t *game_state){
+    return game_state->game_start;
 }
 
 bool game_state_get_balls_powerup(game_state_t *game_state){
@@ -138,4 +150,12 @@ void game_state_set_size_powerdown(game_state_t *game_state, bool size_powerdown
 
 void game_state_set_turn_powerdown(game_state_t *game_state, bool turn_powerdown){
     game_state->turn_powerdown = turn_powerdown;
+}
+
+void game_state_set_game_start(game_state_t *game_state, bool game_start){
+    game_state->game_start = game_start;
+}
+
+void game_state_set_game_quit(game_state_t *game_state, bool game_quit){
+    game_state->game_quit = game_quit;
 }

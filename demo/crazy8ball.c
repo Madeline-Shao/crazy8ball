@@ -59,6 +59,13 @@ const double TINY_CONSTANT = 0.8;
 const double PULL_FACTOR_ADJUSTMENT_CONSTANT = 47;
 const double SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR = 1.265;
 const double POWER_TEXT_Y = 800;
+const double START_MENU_BUTTON_SIDE_LENGTH = 200;
+const double TITLE_TEXT_Y = 250;
+const double PLAY_BUTTON_X = 550;
+const double INFO_BUTTON_X = 950;
+const double QUIT_BUTTON_Y = 650;
+const vector_t QUIT_BUTTON_CENTROID = {1470, 50};
+const double QUIT_BUTTON_SIDE_LENGTH = 50;
 
 body_t *get_object(scene_t *scene, char *name){
     for (int i = 0; i < scene_bodies(scene); i++) {
@@ -343,7 +350,7 @@ void clear_scene(scene_t *scene) {
 
 void change_text(scene_t *scene, char *info, char *text, TTF_Font *font){
     // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100);
-    SDL_Surface *new_text = TTF_RenderText_Solid(font, text, BLACK_COLOR);
+    SDL_Surface *new_text = TTF_RenderText_Solid(font, text, WHITE_COLOR_SDL);
     body_set_image(get_object(scene, info), new_text);
 }
 
@@ -664,8 +671,26 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
     if (key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) == NULL) {
         if (type == MOUSE_DOWN) {
-            // printf("mouse down  - x: %f, y: %f\n", x, y);
-            if(is_balls_stopped((scene_t *) aux)){
+            // quit button
+            if(x >= QUIT_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
+                && x <= QUIT_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
+                && y >= QUIT_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
+                && y <= QUIT_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
+                    game_state_set_game_quit(scene_get_game_state((scene_t *)aux), true);
+            }
+            else if(!game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
+                if(x >= PLAY_BUTTON_X - START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && x <= PLAY_BUTTON_X + START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && y >= HIGH_RIGHT_CORNER.y / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
+                    && y <= HIGH_RIGHT_CORNER.y / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2){
+                        body_remove(get_object((scene_t *) aux, "START_MENU"));
+                        body_remove(get_object((scene_t *) aux, "INFO_BUTTON"));
+                        body_remove(get_object((scene_t *) aux, "PLAY_BUTTON"));
+                        body_remove(get_object((scene_t *) aux, "TITLE_TEXT"));
+                        game_state_set_game_start(scene_get_game_state((scene_t *)aux), true);
+                    }
+                }
+            else if(is_balls_stopped((scene_t *) aux)){
                 body_t *button = get_object((scene_t *) aux, "BUTTON");
                 body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
                 game_state_t *game_state = scene_get_game_state((scene_t *) aux);
@@ -893,37 +918,75 @@ void add_initial_line(scene_t *scene){
 
 void add_text(scene_t *scene, TTF_Font *font){
     list_t *shape = list_init(0, free);
-    SDL_Surface *turn = TTF_RenderText_Solid(font, "Player 1", BLACK_COLOR);
+    SDL_Surface *turn = TTF_RenderText_Solid(font, "Player 1", WHITE_COLOR_SDL);
     body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0, 1}, turn, 300, 100, "TURN_TEXT", NULL);
     vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 100};
     body_set_centroid(turn_text, turn_text_centroid);
     scene_add_body(scene, turn_text);
 
     list_t *shape1 = list_init(0, free);
-    SDL_Surface *type = TTF_RenderText_Solid(font, "", BLACK_COLOR);
+    SDL_Surface *type = TTF_RenderText_Solid(font, "", WHITE_COLOR_SDL);
     body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0, 1}, type, 700, 100, "TYPE_TEXT", NULL);
     vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 100};
     body_set_centroid(type_text, type_text_centroid);
     scene_add_body(scene, type_text);
 
     list_t *shape2 = list_init(0, free);
-    SDL_Surface *win = TTF_RenderText_Solid(font, "", BLACK_COLOR);
+    SDL_Surface *win = TTF_RenderText_Solid(font, "", WHITE_COLOR_SDL);
     body_t *win_text = body_init_with_info(shape2, INFINITY, (rgb_color_t) {1, 0, 0, 1}, win, 700, 100, "WIN_TEXT", NULL);
     vector_t win_text_centroid = {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2};
     body_set_centroid(win_text, win_text_centroid);
     scene_add_body(scene, win_text);
 
     list_t *shape3 = list_init(0, free);
-    SDL_Surface *power = TTF_RenderText_Solid(font, "", BLACK_COLOR);
+    SDL_Surface *power = TTF_RenderText_Solid(font, "", WHITE_COLOR_SDL);
     body_t *power_text = body_init_with_info(shape3, INFINITY, (rgb_color_t) {1, 0, 0, 1}, power, 1100, 100, "POWER_TEXT", NULL);
     vector_t power_text_centroid = {HIGH_RIGHT_CORNER.x / 2, POWER_TEXT_Y};
     body_set_centroid(power_text, power_text_centroid);
     scene_add_body(scene, power_text);
 }
 
+void add_start_menu(scene_t *scene, TTF_Font *font) {
+    // background
+    list_t *bg_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    SDL_Surface *bg_image = IMG_Load("images/carpet-background.png");
+    body_t *bg = body_init_with_info(bg_list, INFINITY, (rgb_color_t) {0,0,0,1}, bg_image, HIGH_RIGHT_CORNER.x, HIGH_RIGHT_CORNER.y, "START_MENU", NULL);//magic numbers
+    body_set_centroid(bg, (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2});
+    scene_add_body(scene, bg);
+
+    // play button
+    list_t *start_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    SDL_Surface *start_image = IMG_Load("images/play-button.png");
+    body_t *start_button = body_init_with_info(start_list, INFINITY, (rgb_color_t) {0,0,0,1}, start_image, START_MENU_BUTTON_SIDE_LENGTH, START_MENU_BUTTON_SIDE_LENGTH, "PLAY_BUTTON", NULL);
+    body_set_centroid(start_button, (vector_t) {PLAY_BUTTON_X, HIGH_RIGHT_CORNER.y / 2});
+    scene_add_body(scene, start_button);
+
+    // instructions button
+    list_t *info_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    SDL_Surface *info_image = IMG_Load("images/help-button.png");
+    body_t *info_button = body_init_with_info(info_list, INFINITY, (rgb_color_t) {0,0,0,1}, info_image, START_MENU_BUTTON_SIDE_LENGTH, START_MENU_BUTTON_SIDE_LENGTH, "INFO_BUTTON", NULL);
+    body_set_centroid(info_button, (vector_t) {INFO_BUTTON_X, HIGH_RIGHT_CORNER.y / 2});
+    scene_add_body(scene, info_button);
+
+    // quit button
+    list_t *quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
+    SDL_Surface *quit_image = IMG_Load("images/back-button.png");
+    body_t *quit_button = body_init_with_info(quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, quit_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "QUIT_BUTTON", NULL);
+    body_set_centroid(quit_button, QUIT_BUTTON_CENTROID);
+    scene_add_body(scene, quit_button);
+
+    // title text
+    list_t *shape = list_init(0, free);
+    SDL_Surface *title = TTF_RenderText_Solid(font, "CRAZY 8 BALL", WHITE_COLOR_SDL);
+    body_t *title_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0, 1}, title, 1000, 200, "TITLE_TEXT", NULL);
+    vector_t title_text_centroid = {HIGH_RIGHT_CORNER.x / 2, TITLE_TEXT_Y};
+    body_set_centroid(title_text, title_text_centroid);
+    scene_add_body(scene, title_text);
+}
+
 void add_background(scene_t *scene) {
     list_t *bg_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *bg_image = IMG_Load("images/background.jpg");
+    SDL_Surface *bg_image = IMG_Load("images/carpet-background.png");
     body_t *bg = body_init_with_info(bg_list, INFINITY, (rgb_color_t) {0,0,0,1}, bg_image, HIGH_RIGHT_CORNER.x, HIGH_RIGHT_CORNER.y, "BACKGROUND", NULL);//magic numbers
     body_set_centroid(bg, (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2});
     scene_add_body(scene, bg);
@@ -947,9 +1010,9 @@ void game_setup(scene_t *scene, TTF_Font *font){
     add_holes(scene);
     add_slider(scene);
     add_text(scene, font);
+    add_start_menu(scene, font);
     sound_setup();
 }
-
 
 
 void add_forces(scene_t *scene){
@@ -1008,6 +1071,9 @@ int main(){
     sdl_on_mouse((mouse_handler_t)player_mouse_handler, scene);
 
     while (!sdl_is_done()){
+        if(game_state_get_game_quit(scene_get_game_state(scene))){
+            break;
+        }
         sdl_render_scene(scene);
         scene_tick(scene, time_since_last_tick());
         stop_balls(scene);
