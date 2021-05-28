@@ -46,10 +46,10 @@ const double BALL_ELASTICITY = 0.6;
 const double MU = 0.9;
 const double G = 15;
 const double DRAG_DIST = 2400;
-const double SLIDER_WIDTH = 60;
+const double SLIDER_WIDTH = 50;
 const double SLIDER_HEIGHT = 500;
 const double SLIDER_X = 250;
-const double BUTTON_WIDTH = 100;
+const double BUTTON_WIDTH = 80;
 const double BUTTON_HEIGHT = 35;
 const double BUTTON_Y = 230;
 const double DEFAULT_IMPULSE = 10;
@@ -321,9 +321,9 @@ bool is_balls_stopped(scene_t *scene) {
 }
 
 bool self_balls_done(scene_t *scene) {
-    for (int i = 0; i < scene_bodies(scene); i++) {
+    for (int i = 0; i < scene_bodies(scene);i++) {
         body_t *ball = scene_get_body(scene, i);
-        printf("self balls done: %s\n", game_state_get_current_type(scene_get_game_state(scene)));
+        // printf("self balls done: %s\n", game_state_get_current_type(scene_get_game_state(scene)));
         if (!strcmp(body_get_info(ball), game_state_get_current_type(scene_get_game_state(scene)))){
             return false;
         }
@@ -394,17 +394,17 @@ void add_ghost_powerup(scene_t *scene, double mass){
 }
 
 void add_balls_powerup(scene_t *scene){
-    list_t *ball_list = list_init(4, (free_func_t) body_free);
+    list_t *ball_list = list_init(2, (free_func_t) body_free);
 
     if (!strcmp(game_state_get_current_type(scene_get_game_state(scene)), "SOLID_BALL")){
-        for (int i = 0; i < 4; i++){
+        for (int i = 0; i < 2; i++){
             SDL_Surface *image = IMG_Load("images/special_striped_ball.png");
             body_t *ball = create_ball(scene, "STRIPED_BALL", image);
             list_add(ball_list, ball);
         }
     }
     else {
-        for (int i = 0; i < 4; i++){
+        for (int i = 0; i < 2; i++){
             SDL_Surface *image = IMG_Load("images/special_solid_ball.png");
             body_t *ball = create_ball(scene, "SOLID_BALL", image);
             list_add(ball_list, ball);
@@ -476,34 +476,36 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     for (int i = 0; i < list_size(balls_sunk); i++) {
         if (game_state_get_current_type(scene_get_game_state(scene)) != NULL && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene))) && !applied_power){
             float power_rand = rand() / (float) RAND_MAX;
-            printf("rand: %f\n", power_rand);
+            // printf("rand: %f\n", power_rand);
             // if (power_rand > 0.8 && power_rand < 0.85){
-            if (power_rand > 0 && power_rand < 0.25){
-                printf("add\n");
+            if (power_rand > 0 && power_rand <= 0.05){
+                // printf("add\n");
                 add_balls_powerup(scene);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER UP: 4 extra balls are forced upon your opponent!", font);
+                game_state_set_balls_powerup(game_state, true);
+                change_text(scene, "POWER_TEXT", "POWER UP: 2 extra balls are forced upon your opponent!", font);
             }
-            else if (power_rand > 0.25 && power_rand < 0.5){
+            else if (power_rand > 0.05 && power_rand <= 0.1){
                 //powerup 2
-                printf("ghost\n");
+                // printf("ghost\n");
                 add_ghost_powerup(scene, 0.0);
                 game_state_set_ghost_powerup(game_state, true);
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!", font);
             }
-            else if (power_rand > 0.5 && power_rand < 0.75){
-                printf("size\n");
+            else if (power_rand > 0.1 && power_rand <= 0.15){
+                // printf("size\n");
                 // powerdown 1
                 add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
                 game_state_set_size_powerdown(game_state, true);
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font);
             }
-            else if (power_rand > 0.75){
+            else if (power_rand > 0.15 && power_rand < 0.2){
                 // powerdown 2
                 switch_turn = true;
-                printf("switch\n");
+                // printf("switch\n");
+                game_state_set_turn_powerdown(game_state, true);
                 change_text(scene, "POWER_TEXT", "POWER UP: Sorry, you may no longer play with your balls!", font);
             }
         }
