@@ -731,16 +731,16 @@ list_t *rect_init(double width, double height) {
 
 void add_instructions(scene_t *scene){
     list_t *instr_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *instr_image = IMG_Load("images/carpet-background.png");
+    SDL_Surface *instr_image = IMG_Load("images/instructions-background.png");
     body_t *instr = body_init_with_info(instr_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_image, HIGH_RIGHT_CORNER.x, HIGH_RIGHT_CORNER.y, "INSTRUCTIONS", NULL);//magic numbers
     body_set_centroid(instr, (vector_t) {HIGH_RIGHT_CORNER.x / 2, HIGH_RIGHT_CORNER.y / 2});
     scene_add_body(scene, instr);
 
     // instructions back button
     list_t *instr_quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *instr_quit_image = IMG_Load("images/play-button.png");
-    body_t *instr_quit_button = body_init_with_info(instr_quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_quit_image, START_MENU_BUTTON_SIDE_LENGTH, START_MENU_BUTTON_SIDE_LENGTH, "INSTR_QUIT", NULL);
-    body_set_centroid(instr_quit_button, (vector_t) {HIGH_RIGHT_CORNER.x / 2, POWER_TEXT_Y});
+    SDL_Surface *instr_quit_image = IMG_Load("images/back-button.png");
+    body_t *instr_quit_button = body_init_with_info(instr_quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_quit_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "INSTR_QUIT", NULL);
+    body_set_centroid(instr_quit_button, QUIT_BUTTON_CENTROID);
     scene_add_body(scene, instr_quit_button);
 }
 
@@ -752,10 +752,10 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
              // within instruction menu code; should work regardless of game_start status
              if (game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))){
                  // close instruction menu if clicking on quit instructions button
-                 if (x >= HIGH_RIGHT_CORNER.x / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
-                 && x <= HIGH_RIGHT_CORNER.x / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2
-                 && y >= POWER_TEXT_Y - START_MENU_BUTTON_SIDE_LENGTH / 2
-                 && y <= POWER_TEXT_Y + START_MENU_BUTTON_SIDE_LENGTH / 2){
+                 if (x >= QUIT_BUTTON_CENTROID.x - START_MENU_BUTTON_SIDE_LENGTH / 2
+                 && x <= QUIT_BUTTON_CENTROID.x + START_MENU_BUTTON_SIDE_LENGTH / 2
+                 && y >= QUIT_BUTTON_CENTROID.y - START_MENU_BUTTON_SIDE_LENGTH / 2
+                 && y <= QUIT_BUTTON_CENTROID.y + START_MENU_BUTTON_SIDE_LENGTH / 2){
                      body_remove(get_object((scene_t *) aux, "INSTRUCTIONS"));
                      body_remove(get_object((scene_t *) aux, "INSTR_QUIT"));
                      game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), false);
