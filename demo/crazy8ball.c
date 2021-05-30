@@ -623,11 +623,28 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                     self_balls_sunk = true;
 
                     char type[45];
+
+                    SDL_Surface *solid_img = IMG_Load("images/special_solid_ball.png");
+                    body_t *solid_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, solid_img,
+                                        5*BALL_RADIUS, 5*BALL_RADIUS, "SOLID_IMAGE", NULL);
+
+                    SDL_Surface *striped_img = IMG_Load("images/special_striped_ball.png");
+                    body_t *striped_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, striped_img,
+                                        5*BALL_RADIUS, 5*BALL_RADIUS, "SOLID_IMAGE", NULL);
+
                     if (!strcmp(game_state_get_player_1_type(game_state), "SOLID_BALL")){
-                        //snprintf(type, 45, "Player 1: %s | Player 2: %s", "SOLID", "STRIPES");
+                        body_set_centroid(solid_ball, (vector_t) {LOW_LEFT_CORNER.x + 200, 72.5});
+                        body_set_centroid(striped_ball, (vector_t) {LOW_LEFT_CORNER.x + 600, 72.5});
+                        scene_add_body(scene, solid_ball);
+                        scene_add_body(scene, striped_ball);
+                        snprintf(type, 45, "Player 1: %s | Player 2: %s", "SOLID", "STRIPES");
                     }
                     else {
-                        //snprintf(type, 45, "Player 1: %s | Player 2: %s", "STRIPES", "SOLID");
+                        body_set_centroid(striped_ball, (vector_t) {LOW_LEFT_CORNER.x + 200, 72.5});
+                        body_set_centroid(solid_ball, (vector_t) {LOW_LEFT_CORNER.x + 600, 72.5});
+                        scene_add_body(scene, solid_ball);
+                        scene_add_body(scene, striped_ball);
+                        snprintf(type, 45, "Player 1: %s | Player 2: %s", "STRIPES", "SOLID");
                     }
                     change_text(scene, "TYPE_TEXT", "PLAYER 1       PLAYER 2", font);
                     break;
