@@ -40,6 +40,7 @@ game_state_t *game_state_init(void){
     new_game_state->size_powerdown = false;
     new_game_state->turn_powerdown = false;
     new_game_state->game_start = false;
+    new_game_state->game_instructions = false;
     new_game_state->game_quit = false;
     return new_game_state;
 }

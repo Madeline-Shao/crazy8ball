@@ -310,12 +310,14 @@ void shoot_handler(double y, void *aux){
             body_remove(get_object((scene_t *) aux, "INITIAL_LINE"));
         }
         play_cue_stick_ball(1);
-        body_set_centroid(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
-        body_set_origin(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
+        // body_set_centroid(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
+        // body_set_origin(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
+        body_set_centroid(cue_stick, (vector_t){1200, HIGH_RIGHT_CORNER.y / 2});
+        body_set_origin(cue_stick, (vector_t){1200, HIGH_RIGHT_CORNER.y / 2});
         double impulse_factor = y - BUTTON_Y;
         vector_t impulse = {impulse_factor * DEFAULT_IMPULSE * -cos(body_get_angle(cue_stick)), impulse_factor * DEFAULT_IMPULSE * -sin(body_get_angle(cue_stick))};
         body_add_impulse(cue_ball, impulse);
-        body_set_rotation(cue_stick, 0);
+        body_set_rotation(cue_stick, M_PI / 2);
         // set end of turn to TRUE
         game_state_set_end_of_turn(scene_get_game_state((scene_t *)aux), true);
     }
@@ -514,12 +516,13 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font);
             }
-            else if (power_rand > 0.15 && power_rand < 0.2){
+            else if (power_rand > 0.15 && power_rand < 0.20){
                 // powerdown 2
-                switch_turn = true;
                 // printf("switch\n");
                 game_state_set_turn_powerdown(game_state, true);
-                change_text(scene, "POWER_TEXT", "POWER UP: Sorry, you may no longer play with your balls!", font);
+                applied_power = true;
+                change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!", font);
+                switch_turn = true;
             }
         }
 
@@ -629,18 +632,21 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             game_state_set_balls_powerup(game_state, false);
             change_text(scene, "POWER_TEXT", "", font);
         }
-        if (game_state_get_ghost_powerup(game_state)){
+        else if (game_state_get_ghost_powerup(game_state)){
             add_ghost_powerup(scene, BALL_MASS);
             game_state_set_ghost_powerup(game_state, false);
             change_text(scene, "POWER_TEXT", "", font);
         }
-        if (game_state_get_size_powerdown(game_state)){
+        else if (game_state_get_size_powerdown(game_state)){
             add_size_powerdown(scene, BALL_RADIUS);
             game_state_set_size_powerdown(game_state, false);
             change_text(scene, "POWER_TEXT", "", font);
         }
-        if (game_state_get_turn_powerdown(game_state)){
+        else if (game_state_get_turn_powerdown(game_state)){
             game_state_set_turn_powerdown(game_state, false);
+            change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!", font);
+        }
+        else {
             change_text(scene, "POWER_TEXT", "", font);
         }
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
@@ -707,34 +713,200 @@ void add_instructions(scene_t *scene){
     scene_add_body(scene, instr_quit_button);
 }
 
+// void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
+//     if (key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) == NULL) {
+//         if (type == MOUSE_DOWN) {
+//             if(game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))){
+//                 if (x >= HIGH_RIGHT_CORNER.x / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
+//                 && x <= HIGH_RIGHT_CORNER.x / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2
+//                 && y >= POWER_TEXT_Y - START_MENU_BUTTON_SIDE_LENGTH / 2
+//                 && y <= POWER_TEXT_Y + START_MENU_BUTTON_SIDE_LENGTH / 2){
+//                     body_remove(get_object((scene_t *) aux, "INSTRUCTIONS"));
+//                     body_remove(get_object((scene_t *) aux, "INSTR_QUIT"));
+//                     game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), false);
+//                 }
+//             }
+//             else if (game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
+//                 if (x >= QUIT_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
+//                 && x <= QUIT_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
+//                 && y >= QUIT_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
+//                 && y <= QUIT_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
+//                     game_state_set_game_quit(scene_get_game_state((scene_t *)aux), true);
+//                 }
+//                 else if (x >= HELP_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
+//                 && x <= HELP_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
+//                 && y >= HELP_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
+//                 && y <= HELP_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
+//                     add_instructions((scene_t *)aux);
+//                     game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
+//                 }
+//                  if(is_balls_stopped((scene_t *) aux)){
+//                     body_t *button = get_object((scene_t *) aux, "BUTTON");
+//                     body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
+//                     game_state_t *game_state = scene_get_game_state((scene_t *) aux);
+//                     if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
+//                         && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
+//                         && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
+//                         && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
+//                             sdl_on_motion((motion_handler_t)slider_handler, aux);
+//                     }
+//                     // click on cue ball
+//                     else if (x >= body_get_centroid(cue_ball).x - BALL_RADIUS
+//                         && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
+//                         && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
+//                         && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
+//                             //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
+//                         if (game_state_get_first_turn(game_state)){
+//                             sdl_on_motion((motion_handler_t)up_down_handler, aux);
+//                         }
+//                         else {
+//                             sdl_on_motion((motion_handler_t)cue_ball_handler, aux);
+//                         }
+//                     }
+//                     else{
+//                         sdl_on_motion((motion_handler_t)rotation_handler, aux);
+//                     }
+//                 }
+//             }
+//             else if (!game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
+//                 // closing out of instructions
+//                 if (game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))
+//                     && x >= HIGH_RIGHT_CORNER.x / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
+//                     && x <= HIGH_RIGHT_CORNER.x / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2
+//                     && y >= POWER_TEXT_Y - START_MENU_BUTTON_SIDE_LENGTH / 2
+//                     && y <= POWER_TEXT_Y + START_MENU_BUTTON_SIDE_LENGTH / 2){
+//                     body_remove(get_object((scene_t *)aux, "INSTRUCTIONS"));
+//                     body_remove(get_object((scene_t *)aux, "INSTR_QUIT"));
+//                     printf("fuck you motherfucker");
+//                 }
+//                 // clicking play
+//                 else if (x >= START_PLAY_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
+//                     && x <= START_PLAY_BUTTON_CENTROID.x + RECTANGULAR_BUTTON_WIDTH / 2
+//                     && y >= START_PLAY_BUTTON_CENTROID.y - RECTANGULAR_BUTTON_HEIGHT / 2
+//                     && y <= START_PLAY_BUTTON_CENTROID.y + RECTANGULAR_BUTTON_HEIGHT / 2){
+//                         body_remove(get_object((scene_t *) aux, "START_MENU"));
+//                         body_remove(get_object((scene_t *) aux, "INFO_BUTTON"));
+//                         body_remove(get_object((scene_t *) aux, "PLAY_BUTTON"));
+//                         body_remove(get_object((scene_t *) aux, "TITLE_TEXT"));
+//                         body_remove(get_object((scene_t *) aux, "START_QUIT_BUTTON"));
+//                         game_state_set_game_start(scene_get_game_state((scene_t *)aux), true);
+//                     }
+//                 // clicking help button
+//                 else if (x >= START_INSTRUCTIONS_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
+//                     && x <= START_INSTRUCTIONS_BUTTON_CENTROID.x + RECTANGULAR_BUTTON_WIDTH / 2
+//                     && y >= START_INSTRUCTIONS_BUTTON_CENTROID.y - RECTANGULAR_BUTTON_HEIGHT / 2
+//                     && y <= START_INSTRUCTIONS_BUTTON_CENTROID.y + RECTANGULAR_BUTTON_HEIGHT / 2){
+//                         add_instructions((scene_t *)aux);
+//                         game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
+//                     }
+//                 // clicking quit button
+//                 else if (x >= START_QUIT_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
+//                     && x <= START_QUIT_BUTTON_CENTROID.x + RECTANGULAR_BUTTON_WIDTH / 2
+//                     && y >= START_QUIT_BUTTON_CENTROID.y - RECTANGULAR_BUTTON_HEIGHT / 2
+//                     && y <= START_QUIT_BUTTON_CENTROID.y + RECTANGULAR_BUTTON_HEIGHT / 2){
+//                         game_state_set_game_quit(scene_get_game_state((scene_t *)aux), true);
+//                     }
+//             }
+//             else if(is_balls_stopped((scene_t *) aux)){
+//                 body_t *button = get_object((scene_t *) aux, "BUTTON");
+//                 body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
+//                 game_state_t *game_state = scene_get_game_state((scene_t *) aux);
+//                 if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
+//                     && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
+//                     && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
+//                     && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
+//                     sdl_on_motion((motion_handler_t)slider_handler, aux);
+//                 }
+//                 // click on cue ball
+//                 else if (x >= body_get_centroid(cue_ball).x - BALL_RADIUS
+//                     && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
+//                     && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
+//                     && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
+//                         //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
+//                     if (game_state_get_first_turn(game_state)){
+//                         sdl_on_motion((motion_handler_t)up_down_handler, aux);
+//                     }
+//                     else {
+//                         sdl_on_motion((motion_handler_t)cue_ball_handler, aux);
+//                     }
+//                 }
+//                 else{
+//                     sdl_on_motion((motion_handler_t)rotation_handler, aux);
+//                 }
+//             }
+//         }
+//         if (type == MOUSE_UP) {
+//             // printf("mouse up - x: %f, y: %f\n", x, y);
+//             sdl_on_motion((NULL), NULL);
+//             shoot_handler(y, aux);
+//         }
+//     }
+// }
+
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
-    if (key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) == NULL) {
-        if (type == MOUSE_DOWN) {
-            if(game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))){
-                if (x >= HIGH_RIGHT_CORNER.x / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
-                && x <= HIGH_RIGHT_CORNER.x / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2
-                && y >= POWER_TEXT_Y - START_MENU_BUTTON_SIDE_LENGTH / 2
-                && y <= POWER_TEXT_Y + START_MENU_BUTTON_SIDE_LENGTH / 2){
-                    body_remove(get_object((scene_t *) aux, "INSTRUCTIONS"));
-                    body_remove(get_object((scene_t *) aux, "INSTR_QUIT"));
-                    game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), false);
+    // do this if the game is not over yet
+     if (key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) == NULL) {
+         if (type == MOUSE_DOWN){
+             // within instruction menu code; should work regardless of game_start status
+             if (game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))){
+                 // close instruction menu if clicking on quit instructions button
+                 if (x >= HIGH_RIGHT_CORNER.x / 2 - START_MENU_BUTTON_SIDE_LENGTH / 2
+                 && x <= HIGH_RIGHT_CORNER.x / 2 + START_MENU_BUTTON_SIDE_LENGTH / 2
+                 && y >= POWER_TEXT_Y - START_MENU_BUTTON_SIDE_LENGTH / 2
+                 && y <= POWER_TEXT_Y + START_MENU_BUTTON_SIDE_LENGTH / 2){
+                     body_remove(get_object((scene_t *) aux, "INSTRUCTIONS"));
+                     body_remove(get_object((scene_t *) aux, "INSTR_QUIT"));
+                     game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), false);
+                 }
+             }
+             // start menu handling
+             else if (!game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
+                 // clicking on play button
+                 if (x >= START_PLAY_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
+                    && x <= START_PLAY_BUTTON_CENTROID.x + RECTANGULAR_BUTTON_WIDTH / 2
+                    && y >= START_PLAY_BUTTON_CENTROID.y - RECTANGULAR_BUTTON_HEIGHT / 2
+                    && y <= START_PLAY_BUTTON_CENTROID.y + RECTANGULAR_BUTTON_HEIGHT / 2){
+                        body_remove(get_object((scene_t *) aux, "START_MENU"));
+                        body_remove(get_object((scene_t *) aux, "INFO_BUTTON"));
+                        body_remove(get_object((scene_t *) aux, "PLAY_BUTTON"));
+                        body_remove(get_object((scene_t *) aux, "TITLE_TEXT"));
+                        body_remove(get_object((scene_t *) aux, "START_QUIT_BUTTON"));
+                        game_state_set_game_start(scene_get_game_state((scene_t *)aux), true);
+                    }
+                 // clicking help button
+                 else if (x >= START_INSTRUCTIONS_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
+                    && x <= START_INSTRUCTIONS_BUTTON_CENTROID.x + RECTANGULAR_BUTTON_WIDTH / 2
+                    && y >= START_INSTRUCTIONS_BUTTON_CENTROID.y - RECTANGULAR_BUTTON_HEIGHT / 2
+                    && y <= START_INSTRUCTIONS_BUTTON_CENTROID.y + RECTANGULAR_BUTTON_HEIGHT / 2){
+                        add_instructions((scene_t *)aux);
+                        game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
+                    }
+                 // clicking quit button
+                 else if (x >= START_QUIT_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
+                    && x <= START_QUIT_BUTTON_CENTROID.x + RECTANGULAR_BUTTON_WIDTH / 2
+                    && y >= START_QUIT_BUTTON_CENTROID.y - RECTANGULAR_BUTTON_HEIGHT / 2
+                    && y <= START_QUIT_BUTTON_CENTROID.y + RECTANGULAR_BUTTON_HEIGHT / 2){
+                        game_state_set_game_quit(scene_get_game_state((scene_t *)aux), true);
+                    }
                 }
-            }
-            if (game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
+             // main game screen handling
+             else if (game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
                 if (x >= QUIT_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
-                && x <= QUIT_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
-                && y >= QUIT_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
-                && y <= QUIT_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
+                    && x <= QUIT_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
+                    && y >= QUIT_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
+                    && y <= QUIT_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
                     game_state_set_game_quit(scene_get_game_state((scene_t *)aux), true);
                 }
                 else if (x >= HELP_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
-                && x <= HELP_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
-                && y >= HELP_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
-                && y <= HELP_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
+                    && x <= HELP_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
+                    && y >= HELP_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
+                    && y <= HELP_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
                     add_instructions((scene_t *)aux);
                     game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
                 }
-                 if(is_balls_stopped((scene_t *) aux)){
+
+                
+                if(is_balls_stopped((scene_t *) aux)){
                     body_t *button = get_object((scene_t *) aux, "BUTTON");
                     body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
                     game_state_t *game_state = scene_get_game_state((scene_t *) aux);
@@ -742,13 +914,13 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                         && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
                         && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
                         && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
-                            sdl_on_motion((motion_handler_t)slider_handler, aux);
+                        sdl_on_motion((motion_handler_t)slider_handler, aux);
                     }
-                // click on cue ball
+                    // click on cue ball
                     else if (x >= body_get_centroid(cue_ball).x - BALL_RADIUS
-                        && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
-                        && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
-                        && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
+                            && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
+                            && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
+                            && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
                             //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
                         if (game_state_get_first_turn(game_state)){
                             sdl_on_motion((motion_handler_t)up_down_handler, aux);
@@ -762,65 +934,11 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                     }
                 }
             }
-            if (!game_state_get_game_start(scene_get_game_state((scene_t *)aux))){
-                if (x >= START_PLAY_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
-                    && x <= START_PLAY_BUTTON_CENTROID.x + RECTANGULAR_BUTTON_WIDTH / 2
-                    && y >= START_PLAY_BUTTON_CENTROID.y - RECTANGULAR_BUTTON_HEIGHT / 2
-                    && y <= START_PLAY_BUTTON_CENTROID.y + RECTANGULAR_BUTTON_HEIGHT / 2){
-                        body_remove(get_object((scene_t *) aux, "START_MENU"));
-                        body_remove(get_object((scene_t *) aux, "INFO_BUTTON"));
-                        body_remove(get_object((scene_t *) aux, "PLAY_BUTTON"));
-                        body_remove(get_object((scene_t *) aux, "TITLE_TEXT"));
-                        body_remove(get_object((scene_t *) aux, "START_QUIT_BUTTON"));
-                        game_state_set_game_start(scene_get_game_state((scene_t *)aux), true);
-                    }
-                else if (x >= START_INSTRUCTIONS_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
-                    && x <= START_INSTRUCTIONS_BUTTON_CENTROID.x + RECTANGULAR_BUTTON_WIDTH / 2
-                    && y >= START_INSTRUCTIONS_BUTTON_CENTROID.y - RECTANGULAR_BUTTON_HEIGHT / 2
-                    && y <= START_INSTRUCTIONS_BUTTON_CENTROID.y + RECTANGULAR_BUTTON_HEIGHT / 2){
-                        add_instructions((scene_t *)aux);
-                        game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
-                    }
-                else if (x >= START_QUIT_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
-                    && x <= START_QUIT_BUTTON_CENTROID.x + RECTANGULAR_BUTTON_WIDTH / 2
-                    && y >= START_QUIT_BUTTON_CENTROID.y - RECTANGULAR_BUTTON_HEIGHT / 2
-                    && y <= START_QUIT_BUTTON_CENTROID.y + RECTANGULAR_BUTTON_HEIGHT / 2){
-                        game_state_set_game_quit(scene_get_game_state((scene_t *)aux), true);
-                    }
-            }
-            else if(is_balls_stopped((scene_t *) aux)){
-                body_t *button = get_object((scene_t *) aux, "BUTTON");
-                body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
-                game_state_t *game_state = scene_get_game_state((scene_t *) aux);
-                if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
-                    && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
-                    && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
-                    && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
-                    sdl_on_motion((motion_handler_t)slider_handler, aux);
-                }
-                // click on cue ball
-                else if (x >= body_get_centroid(cue_ball).x - BALL_RADIUS
-                    && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
-                    && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
-                    && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
-                        //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
-                    if (game_state_get_first_turn(game_state)){
-                        sdl_on_motion((motion_handler_t)up_down_handler, aux);
-                    }
-                    else {
-                        sdl_on_motion((motion_handler_t)cue_ball_handler, aux);
-                    }
-                }
-                else{
-                    sdl_on_motion((motion_handler_t)rotation_handler, aux);
-                }
-            }
         }
-        if (type == MOUSE_UP) {
-            // printf("mouse up - x: %f, y: %f\n", x, y);
-            sdl_on_motion((NULL), NULL);
-            shoot_handler(y, aux);
-        }
+         else if (type == MOUSE_UP){
+             sdl_on_motion((NULL), NULL);
+             shoot_handler(y, aux);
+         }
     }
 }
 
@@ -999,14 +1117,14 @@ void add_text(scene_t *scene, TTF_Font *font){
     list_t *shape = list_init(0, free);
     SDL_Surface *turn = TTF_RenderText_Solid(font, "Player 1", WHITE_COLOR_SDL);
     body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0, 1}, turn, 300, 100, "TURN_TEXT", NULL);
-    vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 100};
+    vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 150};
     body_set_centroid(turn_text, turn_text_centroid);
     scene_add_body(scene, turn_text);
 
     list_t *shape1 = list_init(0, free);
     SDL_Surface *type = TTF_RenderText_Solid(font, "", WHITE_COLOR_SDL);
     body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0, 1}, type, 700, 100, "TYPE_TEXT", NULL);
-    vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 100};
+    vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 150};
     body_set_centroid(type_text, type_text_centroid);
     scene_add_body(scene, type_text);
 
@@ -1067,7 +1185,7 @@ void add_in_game_buttons(scene_t *scene){
     // help button
     list_t *instr_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
     SDL_Surface *instr_image = IMG_Load("images/help-button.png");
-    body_t *instr = body_init_with_info(instr_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "INSTRUCTIONS", NULL);//magic numbers
+    body_t *instr = body_init_with_info(instr_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "HELP_BUTTON", NULL);//magic numbers
     body_set_centroid(instr, HELP_BUTTON_CENTROID);
     scene_add_body(scene, instr);
 
@@ -1174,6 +1292,7 @@ int main(){
         stop_balls(scene);
         if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene) && game_state_get_winner(scene_get_game_state(scene)) == NULL){
             vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball(scene)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+            body_set_rotation(get_cue_stick(scene), 0);
             body_set_centroid(get_cue_stick(scene), cue_centroid);
             body_set_origin(get_cue_stick(scene), body_get_centroid(get_cue_ball(scene)));
             gameplay_handler(scene, font);
