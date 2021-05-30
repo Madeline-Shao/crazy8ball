@@ -624,12 +624,12 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
 
                     char type[45];
                     if (!strcmp(game_state_get_player_1_type(game_state), "SOLID_BALL")){
-                        snprintf(type, 45, "Player 1: %s | Player 2: %s", "SOLID", "STRIPES");
+                        //snprintf(type, 45, "Player 1: %s | Player 2: %s", "SOLID", "STRIPES");
                     }
                     else {
-                        snprintf(type, 45, "Player 1: %s | Player 2: %s", "STRIPES", "SOLID");
+                        //snprintf(type, 45, "Player 1: %s | Player 2: %s", "STRIPES", "SOLID");
                     }
-                    change_text(scene, "TYPE_TEXT", type, font);
+                    change_text(scene, "TYPE_TEXT", "PLAYER 1       PLAYER 2", font);
                     break;
                 }
             }
