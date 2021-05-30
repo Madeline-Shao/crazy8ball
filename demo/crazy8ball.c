@@ -771,7 +771,7 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                         body_remove(get_object((scene_t *) aux, "INFO_BUTTON"));
                         body_remove(get_object((scene_t *) aux, "PLAY_BUTTON"));
                         body_remove(get_object((scene_t *) aux, "TITLE_TEXT"));
-                        body_remove(get_object((scene_t *) aux, "QUIT_BUTTON"));
+                        body_remove(get_object((scene_t *) aux, "START_QUIT_BUTTON"));
                         game_state_set_game_start(scene_get_game_state((scene_t *)aux), true);
                     }
                 else if (x >= START_INSTRUCTIONS_BUTTON_CENTROID.x - RECTANGULAR_BUTTON_WIDTH / 2
@@ -1050,7 +1050,7 @@ void add_start_menu(scene_t *scene, TTF_Font *font) {
     // quit button
     list_t *quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
     SDL_Surface *quit_image = IMG_Load("images/back-button.png");
-    body_t *quit_button = body_init_with_info(quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, quit_image, RECTANGULAR_BUTTON_WIDTH, RECTANGULAR_BUTTON_HEIGHT, "QUIT_BUTTON", NULL);
+    body_t *quit_button = body_init_with_info(quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, quit_image, RECTANGULAR_BUTTON_WIDTH, RECTANGULAR_BUTTON_HEIGHT, "START_QUIT_BUTTON", NULL);
     body_set_centroid(quit_button, START_QUIT_BUTTON_CENTROID);
     scene_add_body(scene, quit_button);
 
