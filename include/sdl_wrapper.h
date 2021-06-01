@@ -95,6 +95,8 @@ void sdl_draw_polygon(list_t *points, rgb_color_t color);
 
 void sdl_set_icon(SDL_Surface *surface);
 
+void sdl_set_title(const char *title);
+
 /**
  * Displays the rendered frame on the SDL window.
  * Must be called after drawing the polygons in order to show them.

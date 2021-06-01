@@ -239,6 +239,10 @@ void sdl_set_icon(SDL_Surface *surface){
     SDL_SetWindowIcon(window, surface);
 }
 
+void sdl_set_title(const char *title){
+    SDL_SetWindowTitle(window, title);
+}
+
 void sdl_show(void) {
     // Draw boundary lines
     vector_t window_center = get_window_center();
