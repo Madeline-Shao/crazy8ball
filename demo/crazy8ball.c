@@ -1247,6 +1247,8 @@ int main(){
     SDL_Surface *icon = IMG_Load("images/ball_8.png");
     sdl_set_icon(icon);
 
+    sdl_set_title("Crazy 8 Ball");
+
     while (!sdl_is_done()){
         if(game_state_get_game_quit(scene_get_game_state(scene))){
             break;
