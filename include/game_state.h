@@ -40,6 +40,12 @@ bool game_state_get_game_instructions(game_state_t *game_state);
 
 bool game_state_get_game_quit(game_state_t *game_state);
 
+list_t *game_state_get_keys(game_state_t *game_state);
+
+bool game_state_get_konami(game_state_t *game_state);
+
+void game_state_set_konami(game_state_t *game_state, bool konami);
+
 void game_state_set_winner(game_state_t *game_state, char *winner);
 
 void game_state_set_cue_ball_sunk(game_state_t *game_state, bool cue_ball_sunk);

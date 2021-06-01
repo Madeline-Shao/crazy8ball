@@ -887,10 +887,29 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
     }
 }
 
-void player_key_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
+void player_key_handler(char key, key_event_type_t type, double held_time, void * aux) {
     if (type == MOUSE_UP){
+        // printf("%c", key);
         game_state_t *game_state = scene_get_game_state((scene_t *)aux);
-        // list_t *keys = game_state_get_keys
+        list_t *keys = game_state_get_keys(game_state);
+        if (list_size(keys) == 10) {
+            list_remove(keys, 0);
+        }
+        if (key == LEFT_ARROW) {
+            list_add(keys, (void *)'!');
+        }
+        else if (key == RIGHT_ARROW) {
+            list_add(keys, (void *)'@');
+        }
+        else if (key == UP_ARROW) {
+            list_add(keys, (void *)'#');
+        }
+        else if (key == DOWN_ARROW) {
+            list_add(keys, (void *)'$');
+        }
+        else {
+            list_add(keys, (void *)key);
+        }
     }
 }
 
@@ -1237,6 +1256,39 @@ void stop_balls(scene_t *scene){
     }
 }
 
+void konami_code(scene_t *scene) {
+    game_state_t *game_state = scene_get_game_state(scene);
+    if (!game_state_get_konami(game_state)) {
+        list_t *code = list_init(10, NULL);
+        list_add(code, (void *)'#');
+        list_add(code, (void *)'#');
+        list_add(code, (void *)'$');
+        list_add(code, (void *)'$');
+        list_add(code, (void *)'!');
+        list_add(code, (void *)'@');
+        list_add(code, (void *)'!');
+        list_add(code, (void *)'@');
+        list_add(code, (void *)'b');
+        list_add(code, (void *)'a');
+        list_t *keys = game_state_get_keys(game_state);
+        if (list_size(keys) >= 10) {
+            for (int i = 0; i < list_size(code); i ++ ){
+                if (list_get(code, i) != list_get(keys, i)) {
+                    return;
+                }
+            }
+            SDL_Surface *bg_image = IMG_Load("images/background.jpg");
+            body_set_image(get_object(scene, "BACKGROUND"), bg_image);
+            if (get_object(scene, "START_MENU") != NULL) {
+                body_set_image(get_object(scene, "START_MENU"), bg_image);
+            }
+            Mix_Chunk *background = Mix_LoadWAV("sounds/konami.wav");
+            Mix_PlayChannel(3, background, -1);
+            game_state_set_konami(game_state, true);
+        }
+    }
+}
+
 int main(){
     SDL_Renderer *renderer = sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
     scene_t *scene = scene_init();
@@ -1264,6 +1316,7 @@ int main(){
         sdl_render_scene(scene);
         scene_tick(scene, time_since_last_tick());
         stop_balls(scene);
+        konami_code(scene);
         if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene) && game_state_get_winner(scene_get_game_state(scene)) == NULL){
             vector_t cue_centroid = vec_add(body_get_centroid(get_cue_ball(scene)), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
             body_set_rotation(get_cue_stick(scene), 0);
