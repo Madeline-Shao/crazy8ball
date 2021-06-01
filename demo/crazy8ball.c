@@ -328,9 +328,9 @@ void shoot_handler(double y, void *aux){
 bool ball_overlap(scene_t *scene, body_t *body){
     for(int i = 0; i < scene_bodies(scene); i++){
         body_t *body1 = scene_get_body(scene, i);
-        if(strcmp(body, body1) && (!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL") 
+        if(strcmp(body_get_info(body), body_get_info(body1)) && (!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL")
         || !strcmp(body_get_info(body1), "8_BALL") || !strcmp(body_get_info(body1), "CUE_BALL"))){
-            if(fabs(body_get_centroid(body).x - body_get_centroid(body1).x) < BALL_RADIUS 
+            if(fabs(body_get_centroid(body).x - body_get_centroid(body1).x) < BALL_RADIUS
             && fabs(body_get_centroid(body).y - body_get_centroid(body1).y) < BALL_RADIUS)
                 return true;
         }
@@ -602,10 +602,14 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                         game_state_set_player_1_type(game_state, (char *) body_get_info(ball));
                         if (!strcmp((char *) body_get_info(ball), "SOLID_BALL")) {
                            // printf("never gonna make you cry");
+                            SDL_Surface *solid_img = IMG_Load("images/solid_type_ball.png");
+                            body_set_image(get_object(scene, "TYPE_INDICATOR"), solid_img);
                             game_state_set_player_2_type(game_state, "STRIPED_BALL");
                         }
                         else {
                             // printf("never gonna say goodbye");
+                            SDL_Surface *striped_img = IMG_Load("images/striped_type_ball.png");
+                            body_set_image(get_object(scene, "TYPE_INDICATOR"), striped_img);
                             game_state_set_player_2_type(game_state, "SOLID_BALL");
                         }
                     }
@@ -613,40 +617,36 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                         game_state_set_player_2_type(game_state, (char *) body_get_info(ball));
                         if (!strcmp((char *) body_get_info(ball), "SOLID_BALL")) {
                             // printf("never gonna tell a lie");
+                            SDL_Surface *solid_img = IMG_Load("images/solid_type_ball.png");
+                            body_set_image(get_object(scene, "TYPE_INDICATOR"), solid_img);
                             game_state_set_player_1_type(game_state, "STRIPED_BALL");
                         }
                         else {
                            // printf("and hurt you");
+                            SDL_Surface *striped_img = IMG_Load("images/striped_type_ball.png");
+                            body_set_image(get_object(scene, "TYPE_INDICATOR"), striped_img);
                             game_state_set_player_1_type(game_state, "SOLID_BALL");
                         }
                     }
                     self_balls_sunk = true;
 
-                    char type[45];
+                    // char type[45];
 
-                    SDL_Surface *solid_img = IMG_Load("images/special_solid_ball.png");
-                    body_t *solid_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, solid_img,
-                                        5*BALL_RADIUS, 5*BALL_RADIUS, "SOLID_IMAGE", NULL);
-
-                    SDL_Surface *striped_img = IMG_Load("images/special_striped_ball.png");
-                    body_t *striped_ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, striped_img,
-                                        5*BALL_RADIUS, 5*BALL_RADIUS, "SOLID_IMAGE", NULL);
-
-                    if (!strcmp(game_state_get_player_1_type(game_state), "SOLID_BALL")){
-                        body_set_centroid(solid_ball, (vector_t) {LOW_LEFT_CORNER.x + 200, 72.5});
-                        body_set_centroid(striped_ball, (vector_t) {LOW_LEFT_CORNER.x + 600, 72.5});
-                        scene_add_body(scene, solid_ball);
-                        scene_add_body(scene, striped_ball);
-                        snprintf(type, 45, "Player 1: %s | Player 2: %s", "SOLID", "STRIPES");
-                    }
-                    else {
-                        body_set_centroid(striped_ball, (vector_t) {LOW_LEFT_CORNER.x + 200, 72.5});
-                        body_set_centroid(solid_ball, (vector_t) {LOW_LEFT_CORNER.x + 600, 72.5});
-                        scene_add_body(scene, solid_ball);
-                        scene_add_body(scene, striped_ball);
-                        snprintf(type, 45, "Player 1: %s | Player 2: %s", "STRIPES", "SOLID");
-                    }
-                    change_text(scene, "TYPE_TEXT", "PLAYER 1       PLAYER 2", font);
+                    // if (!strcmp(game_state_get_player_1_type(game_state), "SOLID_BALL")){
+                    //     body_set_centroid(solid_ball, (vector_t) {LOW_LEFT_CORNER.x + 200, 72.5});
+                    //     body_set_centroid(striped_ball, (vector_t) {LOW_LEFT_CORNER.x + 600, 72.5});
+                    //     scene_add_body(scene, solid_ball);
+                    //     scene_add_body(scene, striped_ball);
+                    //     snprintf(type, 45, "Player 1: %s | Player 2: %s", "SOLID", "STRIPES");
+                    // }
+                    // else {
+                    //     body_set_centroid(striped_ball, (vector_t) {LOW_LEFT_CORNER.x + 200, 72.5});
+                    //     body_set_centroid(solid_ball, (vector_t) {LOW_LEFT_CORNER.x + 600, 72.5});
+                    //     scene_add_body(scene, solid_ball);
+                    //     scene_add_body(scene, striped_ball);
+                    //     snprintf(type, 45, "Player 1: %s | Player 2: %s", "STRIPES", "SOLID");
+                    // }
+                    // change_text(scene, "TYPE_TEXT", "PLAYER 1       PLAYER 2", font);
                     break;
                 }
             }
@@ -683,9 +683,33 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
         if (game_state_get_curr_player_turn(game_state) == 1){
             change_text(scene, "TURN_TEXT", "Player 1", font);
+            if (game_state_get_player_1_type(game_state) != NULL) {
+                if (!strcmp((char *) game_state_get_player_1_type(game_state), "SOLID_BALL")) {
+                    // printf("never gonna make you cry");
+                    SDL_Surface *solid_img = IMG_Load("images/solid_type_ball.png");
+                    body_set_image(get_object(scene, "TYPE_INDICATOR"), solid_img);
+                }
+                else {
+                    // printf("never gonna say goodbye");
+                    SDL_Surface *striped_img = IMG_Load("images/striped_type_ball.png");
+                    body_set_image(get_object(scene, "TYPE_INDICATOR"), striped_img);
+                }
+            }
         }
         else{
             change_text(scene, "TURN_TEXT", "Player 2", font);
+            if (game_state_get_player_2_type(game_state) != NULL) {
+                if (!strcmp((char *) game_state_get_player_2_type(game_state), "SOLID_BALL")) {
+                    // printf("never gonna make you cry");
+                    SDL_Surface *solid_img = IMG_Load("images/solid_type_ball.png");
+                    body_set_image(get_object(scene, "TYPE_INDICATOR"), solid_img);
+                }
+                else {
+                    // printf("never gonna say goodbye");
+                    SDL_Surface *striped_img = IMG_Load("images/striped_type_ball.png");
+                    body_set_image(get_object(scene, "TYPE_INDICATOR"), striped_img);
+                }
+            }
         }
     }
 
@@ -738,7 +762,7 @@ void add_instructions(scene_t *scene){
 
     // instructions back button
     list_t *instr_quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *instr_quit_image = IMG_Load("images/back-button.png");
+    SDL_Surface *instr_quit_image = IMG_Load("images/x-button.png");
     body_t *instr_quit_button = body_init_with_info(instr_quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_quit_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "INSTR_QUIT", NULL);
     body_set_centroid(instr_quit_button, QUIT_BUTTON_CENTROID);
     scene_add_body(scene, instr_quit_button);
@@ -807,7 +831,7 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                     game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), true);
                 }
 
-                
+
                 if(is_balls_stopped((scene_t *) aux)){
                     body_t *button = get_object((scene_t *) aux, "BUTTON");
                     body_t *cue_ball = get_object((scene_t *)aux, "CUE_BALL");
@@ -1019,16 +1043,22 @@ void add_text(scene_t *scene, TTF_Font *font){
     list_t *shape = list_init(0, free);
     SDL_Surface *turn = TTF_RenderText_Solid(font, "Player 1", WHITE_COLOR_SDL);
     body_t *turn_text = body_init_with_info(shape, INFINITY, (rgb_color_t) {1, 0, 0, 1}, turn, 300, 100, "TURN_TEXT", NULL);
-    vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x - 200, 150};
+    vector_t turn_text_centroid = {HIGH_RIGHT_CORNER.x / 2, 130};
     body_set_centroid(turn_text, turn_text_centroid);
     scene_add_body(scene, turn_text);
 
-    list_t *shape1 = list_init(0, free);
-    SDL_Surface *type = TTF_RenderText_Solid(font, "", WHITE_COLOR_SDL);
-    body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0, 1}, type, 700, 100, "TYPE_TEXT", NULL);
-    vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 150};
-    body_set_centroid(type_text, type_text_centroid);
-    scene_add_body(scene, type_text);
+    body_t *ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, NULL,
+                        5*BALL_RADIUS, 5*BALL_RADIUS, "TYPE_INDICATOR", NULL);
+
+    body_set_centroid(ball, (vector_t) {HIGH_RIGHT_CORNER.x / 2 + 300 / 2 + 4 * BALL_RADIUS, 125}); //MAGIC NUMBERS!!!!!!
+    scene_add_body(scene, ball);
+
+    // list_t *shape1 = list_init(0, free);
+    // SDL_Surface *type = TTF_RenderText_Solid(font, "", WHITE_COLOR_SDL);
+    // body_t *type_text = body_init_with_info(shape1, INFINITY, (rgb_color_t) {1, 0, 0, 1}, type, 700, 100, "TYPE_TEXT", NULL);
+    // vector_t type_text_centroid = {LOW_LEFT_CORNER.x + 400, 150};
+    // body_set_centroid(type_text, type_text_centroid);
+    // scene_add_body(scene, type_text);
 
     list_t *shape2 = list_init(0, free);
     SDL_Surface *win = TTF_RenderText_Solid(font, "", WHITE_COLOR_SDL);
@@ -1069,7 +1099,7 @@ void add_start_menu(scene_t *scene, TTF_Font *font) {
 
     // quit button
     list_t *quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *quit_image = IMG_Load("images/back-button.png");
+    SDL_Surface *quit_image = IMG_Load("images/quit-button.png");
     body_t *quit_button = body_init_with_info(quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, quit_image, RECTANGULAR_BUTTON_WIDTH, RECTANGULAR_BUTTON_HEIGHT, "START_QUIT_BUTTON", NULL);
     body_set_centroid(quit_button, START_QUIT_BUTTON_CENTROID);
     scene_add_body(scene, quit_button);
@@ -1086,14 +1116,14 @@ void add_start_menu(scene_t *scene, TTF_Font *font) {
 void add_in_game_buttons(scene_t *scene){
     // help button
     list_t *instr_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *instr_image = IMG_Load("images/help-button.png");
+    SDL_Surface *instr_image = IMG_Load("images/?-button.png");
     body_t *instr = body_init_with_info(instr_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "HELP_BUTTON", NULL);//magic numbers
     body_set_centroid(instr, HELP_BUTTON_CENTROID);
     scene_add_body(scene, instr);
 
     // quit button
     list_t *quit_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *quit_image = IMG_Load("images/back-button.png");
+    SDL_Surface *quit_image = IMG_Load("images/x-button.png");
     body_t *quit_button = body_init_with_info(quit_list, INFINITY, (rgb_color_t) {0,0,0,1}, quit_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "QUIT_BUTTON", NULL);
     body_set_centroid(quit_button, QUIT_BUTTON_CENTROID);
     scene_add_body(scene, quit_button);
@@ -1165,7 +1195,7 @@ void stop_balls(scene_t *scene){
         if (fabs(velocity.x) < VELOCITY_THRESHOLD.x && fabs(velocity.y) < VELOCITY_THRESHOLD.y){
             // add backlog force
             // if(ball_overlap(scene, body)){
-            //     vector_t backlog = {BACKLOG_FORCE_CONSTANT_TO_SATISFY_PATRICKS_DESIRES * cos(body_get_angle(body)), 
+            //     vector_t backlog = {BACKLOG_FORCE_CONSTANT_TO_SATISFY_PATRICKS_DESIRES * cos(body_get_angle(body)),
             //                         BACKLOG_FORCE_CONSTANT_TO_SATISFY_PATRICKS_DESIRES * sin(body_get_angle(body))};
             //     body_add_force(body, backlog);
             // }
