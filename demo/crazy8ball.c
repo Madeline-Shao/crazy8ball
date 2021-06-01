@@ -364,7 +364,8 @@ void clear_scene(scene_t *scene) {
     for (int i = 0; i < scene_bodies(scene); i++) {
         body_t *body = scene_get_body(scene, i);
         if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "8_BALL")
-            || !strcmp(body_get_info(body), "CUE_BALL") || !strcmp(body_get_info(body), "CUE_STICK") || !strcmp(body_get_info(body), "TURN_TEXT")) {
+            || !strcmp(body_get_info(body), "CUE_BALL") || !strcmp(body_get_info(body), "CUE_STICK") || !strcmp(body_get_info(body), "TURN_TEXT")
+            || !strcmp(body_get_info(body), "TYPE_INDICATOR")) {
             body_remove(body);
         }
     }
@@ -385,8 +386,8 @@ body_t *create_ball(scene_t *scene, char *info, SDL_Surface *img){
 
 void add_size_powerdown(scene_t *scene, double radius){
     char *own_type = game_state_get_current_type(scene_get_game_state(scene));
-
-    for(size_t i = 0; i < scene_bodies(scene); i++){
+    if (own_type != NULL ) {
+        for(size_t i = 0; i < scene_bodies(scene); i++){
         body_t *body = scene_get_body(scene, i);
         if(!strcmp(body_get_info(body), own_type)){
             list_t *new_circle = circle_init(radius);
@@ -394,6 +395,7 @@ void add_size_powerdown(scene_t *scene, double radius){
             body_set_height(body, 2 * radius);
             body_set_width(body, 2 * radius);
         }
+    }
     }
 }
 
@@ -505,6 +507,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     for (int i = 0; i < list_size(balls_sunk); i++) {
         if (game_state_get_current_type(scene_get_game_state(scene)) != NULL && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene))) && !applied_power){
             float power_rand = rand() / (float) RAND_MAX;
+            // float power_rand = 0;
             // printf("rand: %f\n", power_rand);
             // if (power_rand > 0.8 && power_rand < 0.85){
             if (power_rand > 0 && power_rand <= 0.05){
@@ -522,14 +525,14 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!", font);
             }
-            else if (power_rand > 0 && power_rand <= 1){
-                // printf("size\n");
-                // powerdown 1
-                add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
-                game_state_set_size_powerdown(game_state, true);
-                applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font);
-            }
+            // else if (power_rand > 0 && power_rand <= 1){
+            //     // printf("size\n");
+            //     // powerdown 1
+            //     add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
+            //     game_state_set_size_powerdown(game_state, true);
+            //     applied_power = true;
+            //     change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font);
+            // }
             else if (power_rand > 0.15 && power_rand < 0.20){
                 // powerdown 2
                 // printf("switch\n");
@@ -549,25 +552,30 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         }
         // 8 ball is sunk and all of your own balls are already sunk
         else if (!strcmp(body_get_info(ball), "8_BALL") && game_state_get_current_type(scene_get_game_state(scene)) != NULL && self_balls_done(scene)) {
+            printf("1\n");
             char winner[9];
             snprintf(winner, 9, "Player %d", game_state_get_curr_player_turn(game_state));
+            printf("2\n");
             game_state_set_winner(game_state, winner);
-            clear_scene(scene);
-
+            printf("3\n");
             char win_message[17];
             snprintf(win_message, 17, "Winner: %s!", game_state_get_winner(game_state));
+            printf("4\n");
             change_text(scene, "WIN_TEXT", win_message, font);
+            printf("5\n");
+            clear_scene(scene);
+            printf("6\n");
         }
         // 8 ball is sunk prematurely
         else if (!strcmp(body_get_info(ball), "8_BALL")) {
             char winner[9];
             snprintf(winner, 9, "Player %d", 3 - game_state_get_curr_player_turn(game_state));
             game_state_set_winner(game_state, winner);
-            clear_scene(scene);
 
             char win_message[17];
             snprintf(win_message, 17, "Winner: %s!", game_state_get_winner(game_state));
             change_text(scene, "WIN_TEXT", win_message, font);
+            clear_scene(scene);
         }
         // sink one of your own balls
         else if (game_state_get_current_type(game_state) != NULL && !strcmp(body_get_info(ball), game_state_get_current_type(game_state))) {
@@ -680,6 +688,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         else {
             change_text(scene, "POWER_TEXT", "", font);
         }
+        add_size_powerdown(scene, BALL_RADIUS);
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
         if (game_state_get_curr_player_turn(game_state) == 1){
             change_text(scene, "TURN_TEXT", "Player 1", font);
