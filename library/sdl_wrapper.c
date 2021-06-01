@@ -235,6 +235,10 @@ void sdl_draw_polygon(list_t *points, rgb_color_t color) {
     free(y_points);
 }
 
+void sdl_set_icon(SDL_Surface *surface){
+    SDL_SetWindowIcon(window, surface);
+}
+
 void sdl_show(void) {
     // Draw boundary lines
     vector_t window_center = get_window_center();
@@ -271,6 +275,8 @@ void sdl_draw_sprite(body_t *body, scene_t *scene){
         else{
             SDL_RenderCopy(renderer, texture, NULL, boundary);
         }
+        SDL_DestroyTexture(texture);
+        SDL_free(boundary);
     }
     if (!strcmp(body_get_info(body), "INITIAL_LINE")){
         sdl_draw_polygon(body_get_shape(body), body_get_color(body));

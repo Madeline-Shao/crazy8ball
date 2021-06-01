@@ -20,7 +20,7 @@
 
 const vector_t LOW_LEFT_CORNER = {0, 0};
 const vector_t HIGH_RIGHT_CORNER = {1500, 900};
-const double CIRCLE_POINTS = 30;
+const double CIRCLE_POINTS = 10;
 const double BALL_RADIUS = 12;
 const double TABLE_MASS = INFINITY;
 const double BALL_MASS = 10;
@@ -525,14 +525,14 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!", font);
             }
-            // else if (power_rand > 0 && power_rand <= 1){
-            //     // printf("size\n");
-            //     // powerdown 1
-            //     add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
-            //     game_state_set_size_powerdown(game_state, true);
-            //     applied_power = true;
-            //     change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font);
-            // }
+            else if (power_rand > 0 && power_rand <= 1){
+                // printf("size\n");
+                // powerdown 1
+                add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
+                game_state_set_size_powerdown(game_state, true);
+                applied_power = true;
+                change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font);
+            }
             else if (power_rand > 0.15 && power_rand < 0.20){
                 // powerdown 2
                 // printf("switch\n");
@@ -780,7 +780,17 @@ void add_instructions(scene_t *scene){
 
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
     // do this if the game is not over yet
-     if (key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) == NULL) {
+    if(key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) != NULL){
+        if(type == MOUSE_DOWN){
+        if (x >= QUIT_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
+                    && x <= QUIT_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
+                    && y >= QUIT_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
+                    && y <= QUIT_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
+                    game_state_set_game_quit(scene_get_game_state((scene_t *)aux), true);
+                }
+        }
+    }
+    else if (key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) == NULL) {
          if (type == MOUSE_DOWN){
              // within instruction menu code; should work regardless of game_start status
              if (game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))){
@@ -1149,7 +1159,10 @@ void add_background(scene_t *scene) {
 void sound_setup() {
     Mix_OpenAudio(22050, AUDIO_S16SYS, 2, 4096);
     Mix_AllocateChannels(100); //magic numbers!!!!!!!!!!!!!!!!!!!!!!!!!!
-    for (int chan = 3; chan < 100; chan++) {
+    Mix_Chunk *background = Mix_LoadWAV("sounds/TakeFive.wav");
+    Mix_PlayChannel(3, background, -1);
+    Mix_Volume(3, 10);
+    for (int chan = 4; chan < 100; chan++) {
         Mix_Volume(chan, 7);
     }
 }
@@ -1170,7 +1183,7 @@ void game_setup(scene_t *scene, TTF_Font *font){
 }
 
 void add_forces(scene_t *scene){
-    int channel_num = 3;
+    int channel_num = 4;
     for(int i = 0; i < scene_bodies(scene) - 1; i++){
         body_t *body1 = scene_get_body(scene, i);
         if(!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL") || !strcmp(body_get_info(body1), "8_BALL") || !strcmp(body_get_info(body1), "CUE_BALL")){
@@ -1230,6 +1243,9 @@ int main(){
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
     add_forces(scene);
     sdl_on_mouse((mouse_handler_t)player_mouse_handler, scene);
+
+    SDL_Surface *icon = IMG_Load("images/ball_8.png");
+    sdl_set_icon(icon);
 
     while (!sdl_is_done()){
         if(game_state_get_game_quit(scene_get_game_state(scene))){
