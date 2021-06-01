@@ -1116,7 +1116,7 @@ void add_start_menu(scene_t *scene, TTF_Font *font) {
 void add_in_game_buttons(scene_t *scene){
     // help button
     list_t *instr_list = rect_init(SLIDER_WIDTH, SLIDER_HEIGHT);
-    SDL_Surface *instr_image = IMG_Load("images/?-button.png");
+    SDL_Surface *instr_image = IMG_Load("images/question-button.png");
     body_t *instr = body_init_with_info(instr_list, INFINITY, (rgb_color_t) {0,0,0,1}, instr_image, QUIT_BUTTON_SIDE_LENGTH, QUIT_BUTTON_SIDE_LENGTH, "HELP_BUTTON", NULL);//magic numbers
     body_set_centroid(instr, HELP_BUTTON_CENTROID);
     scene_add_body(scene, instr);
