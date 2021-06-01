@@ -887,6 +887,13 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
     }
 }
 
+void player_key_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
+    if (type == MOUSE_UP){
+        game_state_t *game_state = scene_get_game_state((scene_t *)aux);
+        // list_t *keys = game_state_get_keys
+    }
+}
+
 void add_stick(scene_t * scene) {
     list_t *stick_shape = rect_init(CUE_STICK_WIDTH, CUE_STICK_HEIGHT);
     SDL_Surface *ball_image = IMG_Load("images/cue_stick.png");
@@ -1243,6 +1250,7 @@ int main(){
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
     add_forces(scene);
     sdl_on_mouse((mouse_handler_t)player_mouse_handler, scene);
+    sdl_on_key((key_handler_t)player_key_handler, scene);
 
     SDL_Surface *icon = IMG_Load("images/ball_8.png");
     sdl_set_icon(icon);

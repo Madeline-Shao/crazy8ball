@@ -21,6 +21,7 @@ typedef struct game_state{
     bool game_start;
     bool game_instructions;
     bool game_quit;
+    list_t *keys;
 } game_state_t;
 
 game_state_t *game_state_init(void){
@@ -42,6 +43,7 @@ game_state_t *game_state_init(void){
     new_game_state->game_start = false;
     new_game_state->game_instructions = false;
     new_game_state->game_quit = false;
+    new_game_state->keys = list_init(10, NULL);
     return new_game_state;
 }
 
@@ -112,6 +114,10 @@ bool game_state_get_cue_ball_sunk(game_state_t *game_state) {
 
 char *game_state_get_winner(game_state_t *game_state) {
     return game_state->winner;
+}
+
+list_t *game_state_get_keys(game_state_t *game_state) {
+    return game_state->keys;
 }
 
 void game_state_set_winner(game_state_t *game_state, char *winner) {
