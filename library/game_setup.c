@@ -226,7 +226,7 @@ void game_setup_add_text(scene_t *scene, TTF_Font *font){
 
     list_t *shape3 = list_init(0, free);
     SDL_Surface *power = TTF_RenderText_Solid(font, "", WHITE_COLOR_SDL);
-    body_t *power_text = body_init_with_info(shape3, INFINITY, WHITE_COLOR, power, WIN_TEXT_WIDTH,
+    body_t *power_text = body_init_with_info(shape3, INFINITY, WHITE_COLOR, power, POWER_TEXT_WIDTH,
                                              TEXT_HEIGHT, "POWER_TEXT", NULL);
     vector_t power_text_centroid = {HIGH_RIGHT_CORNER.x / 2, POWER_TEXT_Y};
     body_set_centroid(power_text, power_text_centroid);
@@ -309,8 +309,8 @@ void game_setup_add_background(scene_t *scene) {
 void sound_setup() {
     Mix_OpenAudio(FREQUENCY, AUDIO_S16SYS, STEREO, CHUNK_SIZE);
     Mix_AllocateChannels(NUM_CHANNELS);
-    Mix_Chunk *background = Mix_LoadWAV("sounds/TakeFive.wav");
-    Mix_PlayChannel(BACKGROUND_CHANNEL, background, -1);
+    // Mix_Chunk *background = Mix_LoadWAV("sounds/TakeFive.wav");
+    // Mix_PlayChannel(BACKGROUND_CHANNEL, background, -1);
     Mix_Volume(BACKGROUND_CHANNEL, BACKGROUND_VOLUME);
     for (int chan = COLLISION_CHANNEL_START; chan < NUM_CHANNELS; chan++) {
         Mix_Volume(chan, COLLISION_VOLUME);

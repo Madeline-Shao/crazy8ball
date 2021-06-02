@@ -288,28 +288,32 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene)))
             && !applied_power){
             float power_rand = rand() / (float) RAND_MAX;
-            if (power_rand > 0.0 && power_rand <= POWER_PROBABILITY_SPACING){
-                add_balls_powerup(scene, (collision_handler_t) balls_collision_handler, (collision_handler_t) ball_destroy);
-                applied_power = true;
-                game_state_set_balls_powerup(game_state, true);
-                change_text(scene, "POWER_TEXT", "POWER UP: 2 extra balls are forced upon your opponent!",
-                            font, GOLD_COLOR_SDL);
-            }
-            else if (power_rand > POWER_PROBABILITY_SPACING && power_rand <= 2 * POWER_PROBABILITY_SPACING){
-                add_ghost_powerup(scene, 0.0);
-                game_state_set_ghost_powerup(game_state, true);
-                applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!",
-                            font, GOLD_COLOR_SDL);
-            }
-            else if (power_rand > 2 * POWER_PROBABILITY_SPACING && power_rand <= 3 * POWER_PROBABILITY_SPACING){
+            // if (power_rand > 0.0 && power_rand <= POWER_PROBABILITY_SPACING){
+            //   if (power_rand > 0.0 && power_rand <= 0.25){
+            //     add_balls_powerup(scene, (collision_handler_t) balls_collision_handler, (collision_handler_t) ball_destroy);
+            //     applied_power = true;
+            //     game_state_set_balls_powerup(game_state, true);
+            //     change_text(scene, "POWER_TEXT", "POWER UP: 2 extra balls are forced upon your opponent!",
+            //                 font, GOLD_COLOR_SDL);
+            // }
+            // // else if (power_rand > POWER_PROBABILITY_SPACING && power_rand <= 2 * POWER_PROBABILITY_SPACING){
+            //   else if (power_rand > 0.25 && power_rand <= 2 * 0.5){
+            //     add_ghost_powerup(scene, 0.0);
+            //     game_state_set_ghost_powerup(game_state, true);
+            //     applied_power = true;
+            //     change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!",
+            //                 font, GOLD_COLOR_SDL);
+            // }
+            // else if (power_rand > 2 * POWER_PROBABILITY_SPACING && power_rand <= 3 * POWER_PROBABILITY_SPACING){
+              if (power_rand > 0.0 && power_rand <= 0.5){
                 add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
                 game_state_set_size_powerdown(game_state, true);
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!",
                             font, GOLD_COLOR_SDL);
             }
-            else if (power_rand > 3 * POWER_PROBABILITY_SPACING && power_rand < 4 * POWER_PROBABILITY_SPACING){
+            // else if (power_rand > 3 * POWER_PROBABILITY_SPACING && power_rand < 4 * POWER_PROBABILITY_SPACING){
+              else if (power_rand > 0.5 && power_rand <= 1){
                 game_state_set_turn_powerdown(game_state, true);
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!",
@@ -566,8 +570,9 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                     else if (x >= body_get_centroid(cue_ball).x - BALL_RADIUS
                             && x <= body_get_centroid(cue_ball).x + BALL_RADIUS
                             && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
-                            && y <= body_get_centroid(cue_ball).y + BALL_RADIUS) {
-                            //&& game_state_get_cue_ball_sunk(game_state) ADD BACK LATER
+                            && y <= body_get_centroid(cue_ball).y + BALL_RADIUS
+                            && (game_state_get_cue_ball_sunk(game_state)
+                            || game_state_get_first_turn(game_state))) {
                         if (game_state_get_first_turn(game_state)){
                             sdl_on_motion((motion_handler_t)cue_ball_up_down_handler, aux);
                         }
