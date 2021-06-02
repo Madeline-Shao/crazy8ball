@@ -265,7 +265,7 @@ void sound_setup() {
     Mix_OpenAudio(22050, AUDIO_S16SYS, 2, 4096);
     Mix_AllocateChannels(100); //magic numbers!!!!!!!!!!!!!!!!!!!!!!!!!!
     Mix_Chunk *background = Mix_LoadWAV("sounds/TakeFive.wav");
-    Mix_PlayChannel(3, background, -1);
+    Mix_PlayChannel(BACKGROUND_CHANNEL, background, -1);
     Mix_Volume(3, 10);
     for (int chan = 4; chan < 100; chan++) {
         Mix_Volume(chan, 7);

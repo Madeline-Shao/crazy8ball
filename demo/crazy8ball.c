@@ -21,24 +21,10 @@
 #include "game_setup.h"
 #include "power_effects.h"
 
-void play_balls_colliding(int channel) {
-    Mix_Chunk *balls_colliding = Mix_LoadWAV("sounds/balls_colliding.wav");
-    Mix_PlayChannel(channel, balls_colliding, 0);
-}
-
-void play_cue_stick_ball(int channel) {
-    Mix_Chunk *cue_stick_ball = Mix_LoadWAV("sounds/cue_stick_ball.wav");
-    Mix_PlayChannel(channel, cue_stick_ball, 0);
-}
-
-void play_pocket(int channel) {
-    Mix_Chunk *pocket = Mix_LoadWAV("sounds/pocket.wav");
-    Mix_PlayChannel(channel, pocket, 0);
-}
-
 void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *aux){
     int channel = *(int *)aux;
-    play_balls_colliding(channel);
+    play_sound(channel, "sounds/balls_colliding.wav");
+
     double u1 = vec_dot(axis, body_get_velocity(body1));
     double u2 = vec_dot(axis, body_get_velocity(body2));
     double reduced_mass;
@@ -59,10 +45,10 @@ void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *
 
 // SHE DID INDEED SAY THAT
 void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
-    play_pocket(2);
+    play_sound(POCKET_CHANNEL, "sounds/pocket.wav");
     list_add(game_state_get_balls_sunk(scene_get_game_state((scene_t *) aux)), ball);
     body_set_image(ball, NULL);
-    body_set_velocity(ball, (vector_t) {0, 0});
+    body_set_velocity(ball, VEC_ZERO);
 }
 
 void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
@@ -143,7 +129,6 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
             body_set_centroid(cue_stick, new_centroid);
         }
     }
-    // printf("mouse motion - x: %f, y: %f, xrel: %f, yrel: %f\n", x, y, xrel, yrel);
 }
 
 void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
@@ -206,11 +191,9 @@ void shoot_handler(double y, void *aux){
         if (game_state_get_first_turn(scene_get_game_state((scene_t *) aux))){
             body_remove(get_object((scene_t *) aux, "INITIAL_LINE"));
         }
-        play_cue_stick_ball(1);
-        // body_set_centroid(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
-        // body_set_origin(cue_stick, (vector_t){HIGH_RIGHT_CORNER.x / 2, CUE_STICK_DEFAULT_Y});
-        body_set_centroid(cue_stick, (vector_t){1200, HIGH_RIGHT_CORNER.y / 2});
-        body_set_origin(cue_stick, (vector_t){1200, HIGH_RIGHT_CORNER.y / 2});
+        play_sound(CUE_STICK_BALL_CHANNEL, "sounds/cue_stick_ball.wav");
+        body_set_centroid(cue_stick, (vector_t){CUE_STICK_DEFAULT_X, HIGH_RIGHT_CORNER.y / 2});
+        body_set_origin(cue_stick, (vector_t){CUE_STICK_DEFAULT_X, HIGH_RIGHT_CORNER.y / 2});
         double impulse_factor = y - BUTTON_Y;
         vector_t impulse = {impulse_factor * DEFAULT_IMPULSE * -cos(body_get_angle(cue_stick)), impulse_factor * DEFAULT_IMPULSE * -sin(body_get_angle(cue_stick))};
         body_add_impulse(cue_ball, impulse);
@@ -248,7 +231,6 @@ bool is_balls_stopped(scene_t *scene) {
 bool self_balls_done(scene_t *scene) {
     for (int i = 0; i < scene_bodies(scene);i++) {
         body_t *ball = scene_get_body(scene, i);
-        // printf("self balls done: %s\n", game_state_get_current_type(scene_get_game_state(scene)));
         if (!strcmp(body_get_info(ball), game_state_get_current_type(scene_get_game_state(scene)))){
             return false;
         }
@@ -267,12 +249,6 @@ void clear_scene(scene_t *scene) {
     }
 }
 
-void change_text(scene_t *scene, char *info, char *text, TTF_Font *font){
-    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100);
-    SDL_Surface *new_text = TTF_RenderText_Solid(font, text, WHITE_COLOR_SDL);
-    body_set_image(get_object(scene, info), new_text);
-}
-
 void gameplay_handler(scene_t *scene, TTF_Font *font) {
     game_state_t *game_state = scene_get_game_state(scene);
 
@@ -280,43 +256,35 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     bool self_balls_sunk = false;
     bool cue_ball_sunk = false;
 
+    change_text(scene, "POWER_TEXT", "", font, GOLD_COLOR_SDL);
+
     list_t *balls_sunk = game_state_get_balls_sunk(game_state);
     bool applied_power = false;
     for (int i = 0; i < list_size(balls_sunk); i++) {
         if (game_state_get_current_type(scene_get_game_state(scene)) != NULL && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene))) && !applied_power){
             float power_rand = rand() / (float) RAND_MAX;
-            // float power_rand = 0;
-            // printf("rand: %f\n", power_rand);
-            // if (power_rand > 0.8 && power_rand < 0.85){
-            if (power_rand > 0 && power_rand <= 0.05){
-                // printf("add\n");
+            if (power_rand > 0.0 && power_rand <= POWER_PROBABILITY_SPACING){
                 add_balls_powerup(scene, (collision_handler_t) balls_collision_handler, (collision_handler_t) ball_destroy);
                 applied_power = true;
                 game_state_set_balls_powerup(game_state, true);
-                change_text(scene, "POWER_TEXT", "POWER UP: 2 extra balls are forced upon your opponent!", font);
+                change_text(scene, "POWER_TEXT", "POWER UP: 2 extra balls are forced upon your opponent!", font, GOLD_COLOR_SDL);
             }
-            else if (power_rand > 0.05 && power_rand <= 0.1){
-                //powerup 2
-                // printf("ghost\n");
+            else if (power_rand > POWER_PROBABILITY_SPACING && power_rand <= 2 * POWER_PROBABILITY_SPACING){
                 add_ghost_powerup(scene, 0.0);
                 game_state_set_ghost_powerup(game_state, true);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!", font);
+                change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!", font, GOLD_COLOR_SDL);
             }
-            else if (power_rand > 0 && power_rand <= 1){
-                // printf("size\n");
-                // powerdown 1
+            else if (power_rand > 2 * POWER_PROBABILITY_SPACING && power_rand <= 3 * POWER_PROBABILITY_SPACING){
                 add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
                 game_state_set_size_powerdown(game_state, true);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font);
+                change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font, GOLD_COLOR_SDL);
             }
-            else if (power_rand > 0.15 && power_rand < 0.20){
-                // powerdown 2
-                // printf("switch\n");
+            else if (power_rand > 3 * POWER_PROBABILITY_SPACING && power_rand < 4 * POWER_PROBABILITY_SPACING){
                 game_state_set_turn_powerdown(game_state, true);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!", font);
+                change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!", font, GOLD_COLOR_SDL);
                 switch_turn = true;
             }
         }
@@ -330,29 +298,23 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         }
         // 8 ball is sunk and all of your own balls are already sunk
         else if (!strcmp(body_get_info(ball), "8_BALL") && game_state_get_current_type(scene_get_game_state(scene)) != NULL && self_balls_done(scene)) {
-            printf("1\n");
             char winner[9];
-            snprintf(winner, 9, "Player %d", game_state_get_curr_player_turn(game_state));
-            printf("2\n");
+            snprintf(winner, WINNER_TEXT_LENGTH, "Player %d", game_state_get_curr_player_turn(game_state));
             game_state_set_winner(game_state, winner);
-            printf("3\n");
             char win_message[17];
-            snprintf(win_message, 17, "Winner: %s!", game_state_get_winner(game_state));
-            printf("4\n");
-            change_text(scene, "WIN_TEXT", win_message, font);
-            printf("5\n");
+            snprintf(win_message, WIN_MESSAGE_LENGTH, "Winner: %s!", game_state_get_winner(game_state));
+            change_text(scene, "WIN_TEXT", win_message, font, WHITE_COLOR_SDL);
             clear_scene(scene);
-            printf("6\n");
         }
         // 8 ball is sunk prematurely
         else if (!strcmp(body_get_info(ball), "8_BALL")) {
             char winner[9];
-            snprintf(winner, 9, "Player %d", 3 - game_state_get_curr_player_turn(game_state));
+            snprintf(winner, WINNER_TEXT_LENGTH, "Player %d", 3 - game_state_get_curr_player_turn(game_state));
             game_state_set_winner(game_state, winner);
 
             char win_message[17];
-            snprintf(win_message, 17, "Winner: %s!", game_state_get_winner(game_state));
-            change_text(scene, "WIN_TEXT", win_message, font);
+            snprintf(win_message, WIN_MESSAGE_LENGTH, "Winner: %s!", game_state_get_winner(game_state));
+            change_text(scene, "WIN_TEXT", win_message, font, WHITE_COLOR_SDL);
             clear_scene(scene);
         }
         // sink one of your own balls
@@ -368,7 +330,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         body_t *cue_stick = get_object(scene, "CUE_STICK");
         SDL_Surface *ball_image = IMG_Load("images/ball_16.png");
         body_set_image(cue_ball, ball_image);
-        body_set_centroid(cue_ball, (vector_t){HIGH_RIGHT_CORNER.x * 4 / 7, HIGH_RIGHT_CORNER.y / 2});
+        body_set_centroid(cue_ball, (vector_t){HIGH_RIGHT_CORNER.x * CUE_BALL_DEFAULT_X_FACTOR, HIGH_RIGHT_CORNER.y / 2});
         vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
         body_set_centroid(cue_stick, cue_centroid);
         body_set_origin(cue_stick, body_get_centroid(cue_ball));
@@ -376,24 +338,18 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
 
     // setting the type for each player
     if (!game_state_get_first_turn(game_state) && game_state_get_player_1_type(game_state) == NULL) {
-        // printf("never gonna give you up");
         if ((cue_ball_sunk && list_size(balls_sunk) > 1) || (!cue_ball_sunk && list_size(balls_sunk) > 0)) {
-            // printf("never gonna give let you down");
             for (int i = 0; i < list_size(balls_sunk); i++) {
                 body_t *ball = list_get(balls_sunk, i);
                 if (strcmp((char *) body_get_info(ball), "CUE_BALL")) {
-                    // printf("never gonna give run around");
                     if (game_state_get_curr_player_turn(game_state) == 1) {
-                       // printf("and desert you");
                         game_state_set_player_1_type(game_state, (char *) body_get_info(ball));
                         if (!strcmp((char *) body_get_info(ball), "SOLID_BALL")) {
-                           // printf("never gonna make you cry");
                             SDL_Surface *solid_img = IMG_Load("images/solid_type_ball.png");
                             body_set_image(get_object(scene, "TYPE_INDICATOR"), solid_img);
                             game_state_set_player_2_type(game_state, "STRIPED_BALL");
                         }
                         else {
-                            // printf("never gonna say goodbye");
                             SDL_Surface *striped_img = IMG_Load("images/striped_type_ball.png");
                             body_set_image(get_object(scene, "TYPE_INDICATOR"), striped_img);
                             game_state_set_player_2_type(game_state, "SOLID_BALL");
@@ -402,37 +358,17 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                     else {
                         game_state_set_player_2_type(game_state, (char *) body_get_info(ball));
                         if (!strcmp((char *) body_get_info(ball), "SOLID_BALL")) {
-                            // printf("never gonna tell a lie");
                             SDL_Surface *solid_img = IMG_Load("images/solid_type_ball.png");
                             body_set_image(get_object(scene, "TYPE_INDICATOR"), solid_img);
                             game_state_set_player_1_type(game_state, "STRIPED_BALL");
                         }
                         else {
-                           // printf("and hurt you");
                             SDL_Surface *striped_img = IMG_Load("images/striped_type_ball.png");
                             body_set_image(get_object(scene, "TYPE_INDICATOR"), striped_img);
                             game_state_set_player_1_type(game_state, "SOLID_BALL");
                         }
                     }
                     self_balls_sunk = true;
-
-                    // char type[45];
-
-                    // if (!strcmp(game_state_get_player_1_type(game_state), "SOLID_BALL")){
-                    //     body_set_centroid(solid_ball, (vector_t) {LOW_LEFT_CORNER.x + 200, 72.5});
-                    //     body_set_centroid(striped_ball, (vector_t) {LOW_LEFT_CORNER.x + 600, 72.5});
-                    //     scene_add_body(scene, solid_ball);
-                    //     scene_add_body(scene, striped_ball);
-                    //     snprintf(type, 45, "Player 1: %s | Player 2: %s", "SOLID", "STRIPES");
-                    // }
-                    // else {
-                    //     body_set_centroid(striped_ball, (vector_t) {LOW_LEFT_CORNER.x + 200, 72.5});
-                    //     body_set_centroid(solid_ball, (vector_t) {LOW_LEFT_CORNER.x + 600, 72.5});
-                    //     scene_add_body(scene, solid_ball);
-                    //     scene_add_body(scene, striped_ball);
-                    //     snprintf(type, 45, "Player 1: %s | Player 2: %s", "STRIPES", "SOLID");
-                    // }
-                    // change_text(scene, "TYPE_TEXT", "PLAYER 1       PLAYER 2", font);
                     break;
                 }
             }
@@ -447,52 +383,48 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     if (switch_turn) {
         if (game_state_get_balls_powerup(game_state)){
             game_state_set_balls_powerup(game_state, false);
-            change_text(scene, "POWER_TEXT", "", font);
+            change_text(scene, "POWER_TEXT", "", font, GOLD_COLOR_SDL);
         }
         else if (game_state_get_ghost_powerup(game_state)){
             add_ghost_powerup(scene, BALL_MASS);
             game_state_set_ghost_powerup(game_state, false);
-            change_text(scene, "POWER_TEXT", "", font);
+            change_text(scene, "POWER_TEXT", "", font, GOLD_COLOR_SDL);
         }
         else if (game_state_get_size_powerdown(game_state)){
             add_size_powerdown(scene, BALL_RADIUS);
             game_state_set_size_powerdown(game_state, false);
-            change_text(scene, "POWER_TEXT", "", font);
+            change_text(scene, "POWER_TEXT", "", font, GOLD_COLOR_SDL);
         }
         else if (game_state_get_turn_powerdown(game_state)){
             game_state_set_turn_powerdown(game_state, false);
-            change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!", font);
+            change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!", font, GOLD_COLOR_SDL);
         }
         else {
-            change_text(scene, "POWER_TEXT", "", font);
+            change_text(scene, "POWER_TEXT", "", font, GOLD_COLOR_SDL);
         }
         add_size_powerdown(scene, BALL_RADIUS);
         game_state_set_curr_player_turn(game_state, 3 - game_state_get_curr_player_turn(game_state));
         if (game_state_get_curr_player_turn(game_state) == 1){
-            change_text(scene, "TURN_TEXT", "Player 1", font);
+            change_text(scene, "TURN_TEXT", "Player 1", font, WHITE_COLOR_SDL);
             if (game_state_get_player_1_type(game_state) != NULL) {
                 if (!strcmp((char *) game_state_get_player_1_type(game_state), "SOLID_BALL")) {
-                    // printf("never gonna make you cry");
                     SDL_Surface *solid_img = IMG_Load("images/solid_type_ball.png");
                     body_set_image(get_object(scene, "TYPE_INDICATOR"), solid_img);
                 }
                 else {
-                    // printf("never gonna say goodbye");
                     SDL_Surface *striped_img = IMG_Load("images/striped_type_ball.png");
                     body_set_image(get_object(scene, "TYPE_INDICATOR"), striped_img);
                 }
             }
         }
         else{
-            change_text(scene, "TURN_TEXT", "Player 2", font);
+            change_text(scene, "TURN_TEXT", "Player 2", font, WHITE_COLOR_SDL);
             if (game_state_get_player_2_type(game_state) != NULL) {
                 if (!strcmp((char *) game_state_get_player_2_type(game_state), "SOLID_BALL")) {
-                    // printf("never gonna make you cry");
                     SDL_Surface *solid_img = IMG_Load("images/solid_type_ball.png");
                     body_set_image(get_object(scene, "TYPE_INDICATOR"), solid_img);
                 }
                 else {
-                    // printf("never gonna say goodbye");
                     SDL_Surface *striped_img = IMG_Load("images/striped_type_ball.png");
                     body_set_image(get_object(scene, "TYPE_INDICATOR"), striped_img);
                 }
@@ -513,12 +445,6 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     if (game_state_get_first_turn(game_state)){
         game_state_set_first_turn(game_state, false);
     }
-    // if (game_state_get_player_1_type(game_state) != NULL && game_state_get_player_2_type(game_state) != NULL) {
-    //     printf("current turn: %d, 1_type: %s, 2_type: %s\n", game_state_get_curr_player_turn(game_state), game_state_get_player_1_type(game_state), game_state_get_player_2_type(game_state));
-    // }
-    // else {
-    //     printf("current turn: %d\n", game_state_get_curr_player_turn(game_state));
-    // }
 }
 
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
@@ -633,10 +559,9 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
 // KONAMI
 void player_key_handler(char key, key_event_type_t type, double held_time, void * aux) {
     if (type == MOUSE_UP){
-        // printf("%c", key);
         game_state_t *game_state = scene_get_game_state((scene_t *)aux);
         list_t *keys = game_state_get_keys(game_state);
-        if (list_size(keys) == 10) {
+        if (list_size(keys) == KONAMI_CODE_LENGTH) {
             list_remove(keys, 0);
         }
         if (key == LEFT_ARROW) {
@@ -658,7 +583,7 @@ void player_key_handler(char key, key_event_type_t type, double held_time, void 
 }
 
 void add_forces(scene_t *scene){
-    int channel_num = 4;
+    int channel_num = COLLISION_CHANNEL_START;
     for(int i = 0; i < scene_bodies(scene) - 1; i++){
         body_t *body1 = scene_get_body(scene, i);
         if(!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL") || !strcmp(body_get_info(body1), "8_BALL") || !strcmp(body_get_info(body1), "CUE_BALL")){
@@ -672,10 +597,7 @@ void add_forces(scene_t *scene){
                     channel_num++;
                 }
                 else if(!strcmp(body_get_info(body2), "HOLE")){
-                    // int *aux = malloc(sizeof(int));
-                    // *aux = channel_num;
                     create_collision(scene, body1, body2, (collision_handler_t) ball_destroy, scene, NULL);
-                    // channel_num++;
                 }
                 if(!strcmp(body_get_info(body1), "CUE_BALL") && !strcmp(body_get_info(body2), "CUE_STICK")){
                     create_physics_collision(scene, BALL_ELASTICITY, body1, body2);
@@ -690,25 +612,15 @@ void stop_balls(scene_t *scene){
         body_t *body = scene_get_body(scene, i);
         vector_t velocity = body_get_velocity(body);
         if (fabs(velocity.x) < VELOCITY_THRESHOLD.x && fabs(velocity.y) < VELOCITY_THRESHOLD.y){
-            // add backlog force
-            // if(ball_overlap(scene, body)){
-            //     vector_t backlog = {BACKLOG_FORCE_CONSTANT_TO_SATISFY_PATRICKS_DESIRES * cos(body_get_angle(body)),
-            //                         BACKLOG_FORCE_CONSTANT_TO_SATISFY_PATRICKS_DESIRES * sin(body_get_angle(body))};
-            //     body_add_force(body, backlog);
-            // }
-            body_set_velocity(body, (vector_t) {0, 0});
-
+            body_set_velocity(body, VEC_ZERO);
         }
-        /*if (!strcmp(body_get_info(body), "CUE_BALL")){
-            printf("%f %f\n", velocity.x, velocity.y);
-        }*/
     }
 }
 
 void konami_code(scene_t *scene) {
     game_state_t *game_state = scene_get_game_state(scene);
     if (!game_state_get_konami(game_state)) {
-        list_t *code = list_init(10, NULL);
+        list_t *code = list_init(KONAMI_CODE_LENGTH, NULL);
         list_add(code, (void *)'#');
         list_add(code, (void *)'#');
         list_add(code, (void *)'$');
@@ -720,7 +632,7 @@ void konami_code(scene_t *scene) {
         list_add(code, (void *)'b');
         list_add(code, (void *)'a');
         list_t *keys = game_state_get_keys(game_state);
-        if (list_size(keys) >= 10) {
+        if (list_size(keys) >= KONAMI_CODE_LENGTH) {
             for (int i = 0; i < list_size(code); i ++ ){
                 if (list_get(code, i) != list_get(keys, i)) {
                     return;
@@ -732,7 +644,7 @@ void konami_code(scene_t *scene) {
                 body_set_image(get_object(scene, "START_MENU"), bg_image);
             }
             Mix_Chunk *background = Mix_LoadWAV("sounds/konami.wav");
-            Mix_PlayChannel(3, background, -1);
+            Mix_PlayChannel(BACKGROUND_CHANNEL, background, -1);
             game_state_set_konami(game_state, true);
         }
     }
@@ -745,10 +657,9 @@ int main(){
     scene_set_game_state(scene, game_state);
 
     TTF_Init();
-    TTF_Font* font = TTF_OpenFont("fonts/BebasNeue-Regular.TTF", 100);
+    TTF_Font* font = TTF_OpenFont("fonts/BebasNeue-Regular.TTF", FONT_SIZE);
     game_setup(scene, font);
 
-    SDL_SetRenderDrawColor(renderer, 0, 255, 255, 0);
     add_forces(scene);
     sdl_on_mouse((mouse_handler_t)player_mouse_handler, scene);
     sdl_on_key((key_handler_t)player_key_handler, scene);
@@ -772,9 +683,6 @@ int main(){
             body_set_centroid(get_object(scene, "CUE_STICK"), cue_centroid);
             body_set_origin(get_object(scene, "CUE_STICK"), body_get_centroid(get_object(scene, "CUE_BALL")));
             gameplay_handler(scene, font);
-        }
-        if (game_state_get_winner(scene_get_game_state(scene)) != NULL) {
-            // printf("winner: %s: \n", game_state_get_winner(scene_get_game_state(scene)));
         }
     }
     scene_free(scene);

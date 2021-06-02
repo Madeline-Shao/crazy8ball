@@ -8,9 +8,12 @@ const double BALL_MASS = 10;
 const double NUM_BALLS  = 16;
 const double CUE_STICK_WIDTH = 400;
 const double CUE_STICK_HEIGHT = 10;
+const double CUE_STICK_DEFAULT_X = 1200;
+const double CUE_BALL_DEFAULT_X_FACTOR = 4 / 7;
 const rgb_color_t WHITE_COLOR = {1, 1, 1, 1};
 const SDL_Color WHITE_COLOR_SDL = {255, 255, 255};
-const SDL_Color BLACK_COLOR = {0, 0, 0};
+const SDL_Color BLACK_COLOR_SDL = {0, 0, 0};
+const SDL_Color GOLD_COLOR_SDL = {241, 194, 50};
 const double TABLE_WIDTH = 800;
 const double TABLE_HEIGHT = 480;
 const double WALL_THICKNESS = 10;
@@ -32,12 +35,16 @@ const double BUTTON_WIDTH = 80;
 const double BUTTON_HEIGHT = 35;
 const double BUTTON_Y = 230;
 const double DEFAULT_IMPULSE = 10;
-const double CUE_STICK_DEFAULT_Y = 177;
 const vector_t VELOCITY_THRESHOLD = {0.5, 0.5};
 const double TINY_CONSTANT = 0.8;
 const double PULL_FACTOR_ADJUSTMENT_CONSTANT = 47;
 const double SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR = 1.265;
 const double POWER_TEXT_Y = 800;
+const double POWER_PROBABILITY_SPACING = 0.05;
+const int WINNER_TEXT_LENGTH = 9;
+const int WIN_MESSAGE_LENGTH = 17;
+const int KONAMI_CODE_LENGTH = 10;
+const int FONT_SIZE = 100;
 const double START_MENU_BUTTON_SIDE_LENGTH = 200;
 const double RECTANGULAR_BUTTON_WIDTH = 490;
 const double RECTANGULAR_BUTTON_HEIGHT = 110;
@@ -52,6 +59,10 @@ const vector_t START_PLAY_BUTTON_CENTROID = {750, 410};
 const vector_t START_INSTRUCTIONS_BUTTON_CENTROID = {750, 560};
 const vector_t START_QUIT_BUTTON_CENTROID = {750, 710};
 const double BACKLOG_FORCE_CONSTANT_TO_SATISFY_PATRICKS_DESIRES = 100;
+const int CUE_STICK_BALL_CHANNEL = 1;
+const int POCKET_CHANNEL = 2;
+const int BACKGROUND_CHANNEL = 3;
+const int COLLISION_CHANNEL_START = 4;
 
 bool overlaps(double x, double y, vector_t centroid){
     if (x < centroid.x + BALL_RADIUS * 2 && x > centroid.x - BALL_RADIUS * 2 && y < centroid.y + BALL_RADIUS * 2
@@ -106,4 +117,15 @@ body_t *create_ball(scene_t *scene, char *info, SDL_Surface *img){
                                         2*BALL_RADIUS, 2*BALL_RADIUS, info, NULL);
     // scene_add_body(scene, ball);
     return ball;
+}
+
+void change_text(scene_t *scene, char *info, char *text, TTF_Font *font, SDL_Color color){
+    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100);
+    SDL_Surface *new_text = TTF_RenderText_Solid(font, text, color);
+    body_set_image(get_object(scene, info), new_text);
+}
+
+void play_sound(int channel, char *sound_file){
+    Mix_Chunk *sound = Mix_LoadWAV(sound_file);
+    Mix_PlayChannel(channel, sound, 0);
 }
