@@ -685,6 +685,28 @@ void konami_code(scene_t *scene) {
     }
 }
 
+void SDL_setup(scene_t *scene) {
+    sdl_on_mouse((mouse_handler_t)player_mouse_handler, scene);
+    sdl_on_key((key_handler_t)player_key_handler, scene);
+
+    SDL_Surface *icon = IMG_Load("images/ball_8.png");
+    sdl_set_icon(icon);
+
+    sdl_set_title("Crazy 8 Ball");
+}
+
+void end_of_turn(scene_t *scene, TTF_Font *font) {
+  if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene)
+            && game_state_get_winner(scene_get_game_state(scene)) == NULL){
+            vector_t cue_centroid = vec_add(body_get_centroid(get_object(scene, "CUE_BALL")),
+                                            (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+            body_set_rotation(get_object(scene, "CUE_STICK"), 0);
+            body_set_centroid(get_object(scene, "CUE_STICK"), cue_centroid);
+            body_set_origin(get_object(scene, "CUE_STICK"), body_get_centroid(get_object(scene, "CUE_BALL")));
+            gameplay_handler(scene, font);
+        }
+}
+
 int main(){
     sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
     scene_t *scene = scene_init();
@@ -694,15 +716,8 @@ int main(){
     TTF_Init();
     TTF_Font* font = TTF_OpenFont("fonts/BebasNeue-Regular.TTF", FONT_SIZE);
     game_setup(scene, font);
-
+    SDL_setup(scene);
     add_forces(scene);
-    sdl_on_mouse((mouse_handler_t)player_mouse_handler, scene);
-    sdl_on_key((key_handler_t)player_key_handler, scene);
-
-    SDL_Surface *icon = IMG_Load("images/ball_8.png");
-    sdl_set_icon(icon);
-
-    sdl_set_title("Crazy 8 Ball");
 
     while (!sdl_is_done()){
         if(game_state_get_game_quit(scene_get_game_state(scene))){
@@ -712,15 +727,7 @@ int main(){
         scene_tick(scene, time_since_last_tick());
         stop_balls(scene);
         konami_code(scene);
-        if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene)
-            && game_state_get_winner(scene_get_game_state(scene)) == NULL){
-            vector_t cue_centroid = vec_add(body_get_centroid(get_object(scene, "CUE_BALL")),
-                                            (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
-            body_set_rotation(get_object(scene, "CUE_STICK"), 0);
-            body_set_centroid(get_object(scene, "CUE_STICK"), cue_centroid);
-            body_set_origin(get_object(scene, "CUE_STICK"), body_get_centroid(get_object(scene, "CUE_BALL")));
-            gameplay_handler(scene, font);
-        }
+        end_of_turn(scene, font);
     }
     scene_free(scene);
 }
