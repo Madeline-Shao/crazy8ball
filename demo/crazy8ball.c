@@ -21,6 +21,13 @@
 #include "game_setup.h"
 #include "power_effects.h"
 
+typedef enum {
+    LEFT_ARROW_CHAR = '!',
+    UP_ARROW_CHAR = '#',
+    RIGHT_ARROW_CHAR = '@',
+    DOWN_ARROW_CHAR = '$'
+} arrow_key_char_t;
+
 void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *aux){
     int channel = *(int *)aux;
     play_sound(channel, "sounds/balls_colliding.wav");
@@ -42,7 +49,6 @@ void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *
     body_add_impulse(body2, vec_multiply(-1, impulse));
 }
 
-
 // SHE DID INDEED SAY THAT
 void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
     play_sound(POCKET_CHANNEL, "sounds/pocket.wav");
@@ -63,14 +69,16 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
         if (-1 * yrel >= xrel){
             body_set_rotation(cue_stick, body_get_angle(cue_stick) - angle);
             double angle1 = body_get_angle(cue_stick) - angle;
-            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1),
+                                     (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
             new_centroid = vec_add(new_centroid, body_get_centroid(ball));
             body_set_centroid(cue_stick, new_centroid);
         }
         else{
             body_set_rotation(cue_stick, body_get_angle(cue_stick) + angle);
             double angle1 = body_get_angle(cue_stick) - angle;
-            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1),
+                                     (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
             new_centroid = vec_add(new_centroid, body_get_centroid(ball));
             body_set_centroid(cue_stick, new_centroid);
         }
@@ -81,14 +89,16 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
         if (yrel >= xrel){
             body_set_rotation(cue_stick, body_get_angle(cue_stick) - angle);
             double angle1 = body_get_angle(cue_stick) - angle;
-            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1),
+                                     (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
             new_centroid = vec_add(new_centroid, body_get_centroid(ball));
             body_set_centroid(cue_stick, new_centroid);
         }
         else{
             body_set_rotation(cue_stick, body_get_angle(cue_stick) + angle);
             double angle1 = body_get_angle(cue_stick) - angle;
-            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1),
+                                     (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
             new_centroid = vec_add(new_centroid, body_get_centroid(ball));
             body_set_centroid(cue_stick, new_centroid);
         }
@@ -99,14 +109,16 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
         if (-1 * yrel <= xrel){
             body_set_rotation(cue_stick, body_get_angle(cue_stick) - angle);
             double angle1 = body_get_angle(cue_stick) - angle;
-            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1),
+                                     (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
             new_centroid = vec_add(new_centroid, body_get_centroid(ball));
             body_set_centroid(cue_stick, new_centroid);
         }
         else{
             body_set_rotation(cue_stick, body_get_angle(cue_stick) + angle);
             double angle1 = body_get_angle(cue_stick) - angle;
-            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1),
+                                     (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
             new_centroid = vec_add(new_centroid, body_get_centroid(ball));
             body_set_centroid(cue_stick, new_centroid);
         }
@@ -117,14 +129,16 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
         if (yrel <= xrel){
             body_set_rotation(cue_stick, body_get_angle(cue_stick) - angle);
             double angle1 = body_get_angle(cue_stick) - angle;
-            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1),
+                                     (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
             new_centroid = vec_add(new_centroid, body_get_centroid(ball));
             body_set_centroid(cue_stick, new_centroid);
         }
         else{
             body_set_rotation(cue_stick, body_get_angle(cue_stick) + angle);
             double angle1 = body_get_angle(cue_stick) - angle;
-            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
+            vector_t new_centroid = {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(angle1),
+                                     (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(angle1)};
             new_centroid = vec_add(new_centroid, body_get_centroid(ball));
             body_set_centroid(cue_stick, new_centroid);
         }
@@ -140,7 +154,8 @@ void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
     if (y >= BUTTON_Y && y <= y_total){
         body_set_centroid(button, (vector_t) {SLIDER_X, y});
         vector_t curr_centroid = body_get_centroid(cue_ball);
-        double adjustment = (y - BUTTON_Y) / y_total * PULL_FACTOR_ADJUSTMENT_CONSTANT + (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2);
+        double adjustment = (y - BUTTON_Y) / y_total * PULL_FACTOR_ADJUSTMENT_CONSTANT +
+                            (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2);
         body_set_centroid(cue_stick, (vector_t) {curr_centroid.x + adjustment * cos(angle),
                                                  curr_centroid.y + adjustment * sin(angle)});
     }
@@ -150,7 +165,8 @@ void cue_ball_up_down_handler(double x, double y, double xrel, double yrel, void
     body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
     vector_t table_centroid = body_get_centroid(get_object((scene_t *) aux, "POOL_TABLE"));
-    if (y < table_centroid.y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS && y > table_centroid.y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS){
+    if (y < table_centroid.y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 -
+        BALL_RADIUS && y > table_centroid.y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS){
         body_set_centroid(cue_ball, (vector_t) {body_get_centroid(cue_ball).x, y});
         vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
         body_set_centroid(cue_stick, cue_centroid);
@@ -163,12 +179,15 @@ void cue_ball_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
     vector_t table_centroid = body_get_centroid(get_object((scene_t *) aux, "POOL_TABLE"));
     // making sure not dragging over another ball
-    if (x < table_centroid.x + TABLE_WIDTH / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS && x > table_centroid.x - TABLE_WIDTH / 2 + TABLE_WALL_THICKNESS  + WALL_THICKNESS / 2 + BALL_RADIUS
-        && y < table_centroid.y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS && y > table_centroid.y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS){
+    if (x < table_centroid.x + TABLE_WIDTH / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS
+        && x > table_centroid.x - TABLE_WIDTH / 2 + TABLE_WALL_THICKNESS  + WALL_THICKNESS / 2 + BALL_RADIUS
+        && y < table_centroid.y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 - BALL_RADIUS
+        && y > table_centroid.y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS){
         scene_t *scene = (scene_t *)aux;
         for (int i = 0; i < scene_bodies(scene); i++) {
             body_t *body = scene_get_body(scene, i);
-            if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "8_BALL")) {
+            if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL")
+                || !strcmp(body_get_info(body), "8_BALL")) {
                 vector_t ball_centroid = body_get_centroid(body);
                 if (overlaps(x, y, ball_centroid)) {
                     return;
@@ -177,7 +196,8 @@ void cue_ball_handler(double x, double y, double xrel, double yrel, void *aux) {
         }
         body_set_centroid(cue_ball, (vector_t) {x, y});
         vector_t cue_centroid = vec_add(body_get_centroid(cue_ball),
-                                    (vector_t) {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(body_get_angle(cue_stick)), (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(body_get_angle(cue_stick))});
+                                    (vector_t) {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(body_get_angle(cue_stick)),
+                                                (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(body_get_angle(cue_stick))});
         body_set_centroid(cue_stick, cue_centroid);
         body_set_origin(cue_stick, body_get_centroid(cue_ball));
     }
@@ -195,7 +215,8 @@ void shoot_handler(double y, void *aux){
         body_set_centroid(cue_stick, (vector_t){CUE_STICK_DEFAULT_X, HIGH_RIGHT_CORNER.y / 2});
         body_set_origin(cue_stick, (vector_t){CUE_STICK_DEFAULT_X, HIGH_RIGHT_CORNER.y / 2});
         double impulse_factor = y - BUTTON_Y;
-        vector_t impulse = {impulse_factor * DEFAULT_IMPULSE * -cos(body_get_angle(cue_stick)), impulse_factor * DEFAULT_IMPULSE * -sin(body_get_angle(cue_stick))};
+        vector_t impulse = {impulse_factor * DEFAULT_IMPULSE * -cos(body_get_angle(cue_stick)),
+                            impulse_factor * DEFAULT_IMPULSE * -sin(body_get_angle(cue_stick))};
         body_add_impulse(cue_ball, impulse);
         body_set_rotation(cue_stick, M_PI / 2);
         // set end of turn to TRUE
@@ -207,7 +228,8 @@ void shoot_handler(double y, void *aux){
 bool ball_overlap(scene_t *scene, body_t *body){
     for(int i = 0; i < scene_bodies(scene); i++){
         body_t *body1 = scene_get_body(scene, i);
-        if(strcmp(body_get_info(body), body_get_info(body1)) && (!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL")
+        if(strcmp(body_get_info(body), body_get_info(body1)) && (!strcmp(body_get_info(body1), "SOLID_BALL")
+           || !strcmp(body_get_info(body1), "STRIPED_BALL")
         || !strcmp(body_get_info(body1), "8_BALL") || !strcmp(body_get_info(body1), "CUE_BALL"))){
             if(fabs(body_get_centroid(body).x - body_get_centroid(body1).x) < BALL_RADIUS
             && fabs(body_get_centroid(body).y - body_get_centroid(body1).y) < BALL_RADIUS)
@@ -241,8 +263,9 @@ bool self_balls_done(scene_t *scene) {
 void clear_scene(scene_t *scene) {
     for (int i = 0; i < scene_bodies(scene); i++) {
         body_t *body = scene_get_body(scene, i);
-        if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "8_BALL")
-            || !strcmp(body_get_info(body), "CUE_BALL") || !strcmp(body_get_info(body), "CUE_STICK") || !strcmp(body_get_info(body), "TURN_TEXT")
+        if (!strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "SOLID_BALL")
+            || !strcmp(body_get_info(body), "8_BALL") || !strcmp(body_get_info(body), "CUE_BALL")
+            || !strcmp(body_get_info(body), "CUE_STICK") || !strcmp(body_get_info(body), "TURN_TEXT")
             || !strcmp(body_get_info(body), "TYPE_INDICATOR")) {
             body_remove(body);
         }
@@ -261,30 +284,36 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     list_t *balls_sunk = game_state_get_balls_sunk(game_state);
     bool applied_power = false;
     for (int i = 0; i < list_size(balls_sunk); i++) {
-        if (game_state_get_current_type(scene_get_game_state(scene)) != NULL && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene))) && !applied_power){
+        if (game_state_get_current_type(scene_get_game_state(scene)) != NULL
+            && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene)))
+            && !applied_power){
             float power_rand = rand() / (float) RAND_MAX;
             if (power_rand > 0.0 && power_rand <= POWER_PROBABILITY_SPACING){
                 add_balls_powerup(scene, (collision_handler_t) balls_collision_handler, (collision_handler_t) ball_destroy);
                 applied_power = true;
                 game_state_set_balls_powerup(game_state, true);
-                change_text(scene, "POWER_TEXT", "POWER UP: 2 extra balls are forced upon your opponent!", font, GOLD_COLOR_SDL);
+                change_text(scene, "POWER_TEXT", "POWER UP: 2 extra balls are forced upon your opponent!",
+                            font, GOLD_COLOR_SDL);
             }
             else if (power_rand > POWER_PROBABILITY_SPACING && power_rand <= 2 * POWER_PROBABILITY_SPACING){
                 add_ghost_powerup(scene, 0.0);
                 game_state_set_ghost_powerup(game_state, true);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!", font, GOLD_COLOR_SDL);
+                change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!",
+                            font, GOLD_COLOR_SDL);
             }
             else if (power_rand > 2 * POWER_PROBABILITY_SPACING && power_rand <= 3 * POWER_PROBABILITY_SPACING){
                 add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
                 game_state_set_size_powerdown(game_state, true);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!", font, GOLD_COLOR_SDL);
+                change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!",
+                            font, GOLD_COLOR_SDL);
             }
             else if (power_rand > 3 * POWER_PROBABILITY_SPACING && power_rand < 4 * POWER_PROBABILITY_SPACING){
                 game_state_set_turn_powerdown(game_state, true);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!", font, GOLD_COLOR_SDL);
+                change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!",
+                            font, GOLD_COLOR_SDL);
                 switch_turn = true;
             }
         }
@@ -297,9 +326,10 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             game_state_set_cue_ball_sunk(game_state, true);
         }
         // 8 ball is sunk and all of your own balls are already sunk
-        else if (!strcmp(body_get_info(ball), "8_BALL") && game_state_get_current_type(scene_get_game_state(scene)) != NULL && self_balls_done(scene)) {
+        else if (!strcmp(body_get_info(ball), "8_BALL") && game_state_get_current_type(scene_get_game_state(scene)) != NULL
+                 && self_balls_done(scene)) {
             char winner[9];
-            snprintf(winner, WINNER_TEXT_LENGTH, "Player %d", game_state_get_curr_player_turn(game_state));
+            snprintf(winner, WINNER_TEXT_LENGTH, "Player %zu", game_state_get_curr_player_turn(game_state));
             game_state_set_winner(game_state, winner);
             char win_message[17];
             snprintf(win_message, WIN_MESSAGE_LENGTH, "Winner: %s!", game_state_get_winner(game_state));
@@ -309,7 +339,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         // 8 ball is sunk prematurely
         else if (!strcmp(body_get_info(ball), "8_BALL")) {
             char winner[9];
-            snprintf(winner, WINNER_TEXT_LENGTH, "Player %d", 3 - game_state_get_curr_player_turn(game_state));
+            snprintf(winner, WINNER_TEXT_LENGTH, "Player %zu", 3 - game_state_get_curr_player_turn(game_state));
             game_state_set_winner(game_state, winner);
 
             char win_message[17];
@@ -318,7 +348,8 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             clear_scene(scene);
         }
         // sink one of your own balls
-        else if (game_state_get_current_type(game_state) != NULL && !strcmp(body_get_info(ball), game_state_get_current_type(game_state))) {
+        else if (game_state_get_current_type(game_state) != NULL && !strcmp(body_get_info(ball),
+                 game_state_get_current_type(game_state))) {
             self_balls_sunk = true;
         }
     }
@@ -397,7 +428,8 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         }
         else if (game_state_get_turn_powerdown(game_state)){
             game_state_set_turn_powerdown(game_state, false);
-            change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!", font, GOLD_COLOR_SDL);
+            change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!",
+                        font, GOLD_COLOR_SDL);
         }
         else {
             change_text(scene, "POWER_TEXT", "", font, GOLD_COLOR_SDL);
@@ -565,16 +597,16 @@ void player_key_handler(char key, key_event_type_t type, double held_time, void 
             list_remove(keys, 0);
         }
         if (key == LEFT_ARROW) {
-            list_add(keys, (void *)'!');
+            list_add(keys, (void *)LEFT_ARROW_CHAR);
         }
         else if (key == RIGHT_ARROW) {
-            list_add(keys, (void *)'@');
+            list_add(keys, (void *)RIGHT_ARROW_CHAR);
         }
         else if (key == UP_ARROW) {
-            list_add(keys, (void *)'#');
+            list_add(keys, (void *)UP_ARROW_CHAR);
         }
         else if (key == DOWN_ARROW) {
-            list_add(keys, (void *)'$');
+            list_add(keys, (void *)DOWN_ARROW_CHAR);
         }
         else {
             list_add(keys, (void *)key);
@@ -586,11 +618,14 @@ void add_forces(scene_t *scene){
     int channel_num = COLLISION_CHANNEL_START;
     for(int i = 0; i < scene_bodies(scene) - 1; i++){
         body_t *body1 = scene_get_body(scene, i);
-        if(!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL") || !strcmp(body_get_info(body1), "8_BALL") || !strcmp(body_get_info(body1), "CUE_BALL")){
+        if(!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL")
+           || !strcmp(body_get_info(body1), "8_BALL") || !strcmp(body_get_info(body1), "CUE_BALL")){
             create_friction(scene, MU, G, body1);
             for (int j = i + 1; j < scene_bodies(scene); j++) {
                 body_t *body2 = scene_get_body(scene, j);
-                if(!strcmp(body_get_info(body2), "SOLID_BALL") || !strcmp(body_get_info(body2), "STRIPED_BALL") || !strcmp(body_get_info(body2), "8_BALL") || !strcmp(body_get_info(body2), "CUE_BALL") || !strcmp(body_get_info(body2), "WALL")){
+                if(!strcmp(body_get_info(body2), "SOLID_BALL") || !strcmp(body_get_info(body2), "STRIPED_BALL")
+                   || !strcmp(body_get_info(body2), "8_BALL") || !strcmp(body_get_info(body2), "CUE_BALL")
+                   || !strcmp(body_get_info(body2), "WALL")){
                     int *aux = malloc(sizeof(int));
                     *aux = channel_num;
                     create_collision(scene, body1, body2, (collision_handler_t) balls_collision_handler, aux, NULL);
@@ -621,14 +656,14 @@ void konami_code(scene_t *scene) {
     game_state_t *game_state = scene_get_game_state(scene);
     if (!game_state_get_konami(game_state)) {
         list_t *code = list_init(KONAMI_CODE_LENGTH, NULL);
-        list_add(code, (void *)'#');
-        list_add(code, (void *)'#');
-        list_add(code, (void *)'$');
-        list_add(code, (void *)'$');
-        list_add(code, (void *)'!');
-        list_add(code, (void *)'@');
-        list_add(code, (void *)'!');
-        list_add(code, (void *)'@');
+        list_add(code, (void *)UP_ARROW_CHAR);
+        list_add(code, (void *)UP_ARROW_CHAR);
+        list_add(code, (void *)DOWN_ARROW_CHAR);
+        list_add(code, (void *)DOWN_ARROW_CHAR);
+        list_add(code, (void *)LEFT_ARROW_CHAR);
+        list_add(code, (void *)RIGHT_ARROW_CHAR);
+        list_add(code, (void *)LEFT_ARROW_CHAR);
+        list_add(code, (void *)RIGHT_ARROW_CHAR);
         list_add(code, (void *)'b');
         list_add(code, (void *)'a');
         list_t *keys = game_state_get_keys(game_state);
@@ -651,7 +686,7 @@ void konami_code(scene_t *scene) {
 }
 
 int main(){
-    SDL_Renderer *renderer = sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
+    sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
     scene_t *scene = scene_init();
     game_state_t *game_state = game_state_init();
     scene_set_game_state(scene, game_state);
@@ -677,8 +712,10 @@ int main(){
         scene_tick(scene, time_since_last_tick());
         stop_balls(scene);
         konami_code(scene);
-        if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene) && game_state_get_winner(scene_get_game_state(scene)) == NULL){
-            vector_t cue_centroid = vec_add(body_get_centroid(get_object(scene, "CUE_BALL")), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+        if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene)
+            && game_state_get_winner(scene_get_game_state(scene)) == NULL){
+            vector_t cue_centroid = vec_add(body_get_centroid(get_object(scene, "CUE_BALL")),
+                                            (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
             body_set_rotation(get_object(scene, "CUE_STICK"), 0);
             body_set_centroid(get_object(scene, "CUE_STICK"), cue_centroid);
             body_set_origin(get_object(scene, "CUE_STICK"), body_get_centroid(get_object(scene, "CUE_BALL")));
