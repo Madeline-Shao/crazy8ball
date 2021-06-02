@@ -4,7 +4,7 @@ DEMOS = bounce gravity pacman nbodies damping spaceinvaders breakout pegs crazy8
 STAFF_LIBS = test_util sdl_wrapper
 # List of C files in "libraries" that you will write.
 # This also defines the order in which the tests are run.
-STUDENT_LIBS = vector list polygon color body scene forces collision force_params force_wrapper collision_params game_state
+STUDENT_LIBS = vector list polygon color body scene forces collision force_params force_wrapper collision_params game_state game_util game_setup
 
 # If we're not on Windows...
 ifneq ($(OS), Windows_NT)
