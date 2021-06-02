@@ -20,4 +20,4 @@ void add_size_powerdown(scene_t *scene, double radius);
 
 void add_ghost_powerup(scene_t *scene, double mass);
 
-void add_balls_powerup(scene_t *scene, collision_handler_t balls_collision_handler, collision_handler_t ball_destroy){
+void add_balls_powerup(scene_t *scene, collision_handler_t balls_collision_handler, collision_handler_t ball_destroy);

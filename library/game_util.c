@@ -53,6 +53,14 @@ const vector_t START_INSTRUCTIONS_BUTTON_CENTROID = {750, 560};
 const vector_t START_QUIT_BUTTON_CENTROID = {750, 710};
 const double BACKLOG_FORCE_CONSTANT_TO_SATISFY_PATRICKS_DESIRES = 100;
 
+bool overlaps(double x, double y, vector_t centroid){
+    if (x < centroid.x + BALL_RADIUS * 2 && x > centroid.x - BALL_RADIUS * 2 && y < centroid.y + BALL_RADIUS * 2
+                    && y > centroid.y - BALL_RADIUS * 2){
+                        return true;
+                    }
+    return false;
+}
+
 list_t *rect_init(double width, double height) {
     vector_t half_width  = {.x = width / 2, .y = 0.0},
              half_height = {.x = 0.0, .y = height / 2};

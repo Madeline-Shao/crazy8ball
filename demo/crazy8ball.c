@@ -21,14 +21,6 @@
 #include "game_setup.h"
 #include "power_effects.h"
 
-bool overlaps(double x, double y, vector_t centroid){
-    if (x < centroid.x + BALL_RADIUS * 2 && x > centroid.x - BALL_RADIUS * 2 && y < centroid.y + BALL_RADIUS * 2
-                    && y > centroid.y - BALL_RADIUS * 2){
-                        return true;
-                    }
-    return false;
-}
-
 void play_balls_colliding(int channel) {
     Mix_Chunk *balls_colliding = Mix_LoadWAV("sounds/balls_colliding.wav");
     Mix_PlayChannel(channel, balls_colliding, 0);

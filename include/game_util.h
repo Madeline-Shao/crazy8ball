@@ -58,6 +58,8 @@ extern const vector_t START_INSTRUCTIONS_BUTTON_CENTROID;
 extern const vector_t START_QUIT_BUTTON_CENTROID;
 extern const double BACKLOG_FORCE_CONSTANT_TO_SATISFY_PATRICKS_DESIRES;
 
+bool overlaps(double x, double y, vector_t centroid);
+
 list_t *rect_init(double width, double height);
 
 list_t *circle_init(double radius);
