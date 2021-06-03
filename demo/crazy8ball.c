@@ -1,5 +1,7 @@
 #include <stdio.h>
+#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#endif
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
@@ -868,5 +870,11 @@ void c_main(){
 
 
 int main() {
+#ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(c_main, 60, 1);
+#else
+    while (1) {
+        c_main();
+    }
+#endif
 }

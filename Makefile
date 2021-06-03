@@ -10,7 +10,8 @@ STUDENT_LIBS = vector list polygon color body scene forces collision force_param
 ifneq ($(OS), Windows_NT)
 
 # Use clang as the C compiler
-CC = emcc#clang
+CC = clang
+EMCC = emcc
 # Flags to pass to clang:
 # -Iinclude tells clang to look for #include files in the "include" folder
 # -Wall turns on all warnings
@@ -18,8 +19,8 @@ CC = emcc#clang
 # -fno-omit-frame-pointer allows stack traces to be generated
 #   (take CS 24 for a full explanation)
 # -fsanitize=address enables asan
-EMCC_FLAGS =  -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=655360000 -s USE_SDL=2 -s USE_SDL_GFX=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_SDL_MIXER=2 -s ASSERTIONS=1 -O3 --preload-file images --preload-file fonts --use-preload-plugins
-CFLAGS =  $(EMCC_FLAGS) -Iinclude $(shell sdl2-config --cflags | sed -e "s/include\/SDL2/include/") -Wall -g -fno-omit-frame-pointer #-fsanitize=address -Wno-nullability-completeness
+EMCC_FLAGS =  -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=655360000 -s USE_SDL=2 -s USE_SDL_GFX=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_SDL_MIXER=2 -s ASSERTIONS=1 -O3 --preload-file images --preload-file fonts --preload-file sounds --use-preload-plugins
+CFLAGS =  -Iinclude $(shell sdl2-config --cflags | sed -e "s/include\/SDL2/include/") -Wall -g -fno-omit-frame-pointer #-fsanitize=address -Wno-nullability-completeness
 # Compiler flag that links the program with the math library
 LIB_MATH = -lm
 # Compiler flags that link the program with the math and SDL libraries.
@@ -31,6 +32,7 @@ LIBS = $(LIB_MATH) $(shell sdl2-config --libs) -lSDL2_gfx -lSDL2_image -lSDL2_tt
 # Don't worry about the syntax; it's just adding "out/" to the start
 # and ".o" to the end of each value in STUDENT_LIBS.
 STUDENT_OBJS = $(addprefix out/,$(STUDENT_LIBS:=.o))
+WASM_STUDENT_OBJS = $(addprefix out/,$(STUDENT_LIBS:=.wasm.o))
 # List of test suite executables, e.g. "bin/test_suite_vector"
 TEST_BINS = $(addprefix bin/test_suite_,$(STUDENT_LIBS))
 # List of demo executables, i.e. "bin/bounce".
@@ -61,6 +63,14 @@ out/%.o: demo/%.c # or "demo"
 out/%.o: tests/%.c # or "tests"
 	$(CC) -c $(CFLAGS) $^ -o $@
 
+out/%.wasm.o: library/%.c # source file may be found in "library"
+	$(EMCC) $(EMCC_FLAGS) -c $(CFLAGS) $^ -o $@
+out/%.wasm.o: demo/%.c # or "demo"
+	$(EMCC) $(EMCC_FLAGS) -c $(CFLAGS) $^ -o $@
+out/%.wasm.o: tests/%.c # or "tests"
+	$(EMCC) $(EMCC_FLAGS) -c $(CFLAGS) $^ -o $@
+
+
 # Builds bin/bounce by linking the necessary .o files.
 # Unlike the out/%.o rule, this uses the LIBS flags and omits the -c flag,
 # since it is building a full executable.
@@ -88,8 +98,13 @@ bin/pegs: out/pegs.o out/sdl_wrapper.o $(STUDENT_OBJS)
 bin/breakout: out/breakout.o out/sdl_wrapper.o $(STUDENT_OBJS)
 		$(CC) $(CFLAGS) $(LIBS) $^ -o $@
 
+
+bin/crazy8ball.html: out/crazy8ball.wasm.o out/sdl_wrapper.wasm.o $(WASM_STUDENT_OBJS)
+		$(EMCC) $(EMCC_FLAGS) $(CFLAGS) $(LIBS) $^ -o $@
+
 bin/crazy8ball: out/crazy8ball.o out/sdl_wrapper.o $(STUDENT_OBJS)
-		$(CC) $(CFLAGS) $(LIBS) $^ -o output.html 
+		$(CC) $(CFLAGS) $(LIBS) $^ -o $@
+
 
 # Builds the test suite executables from the corresponding test .o file
 # and the library .o files. The only difference from the demo build command
