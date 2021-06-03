@@ -854,7 +854,11 @@ void c_main(){
             inited = true;
         }
         if(game_state_get_game_quit(scene_get_game_state(scene))){
+            #ifdef __EMSCRIPTEN__
             emscripten_cancel_main_loop();
+            #else
+            exit(0);
+            #endif
             return;
         }
         sdl_render_scene(scene);
@@ -863,7 +867,11 @@ void c_main(){
         konami_code(scene);
         end_of_turn(scene, font);
         if (sdl_is_done()) {
+            #ifdef __EMSCRIPTEN__
             emscripten_cancel_main_loop();
+            #else
+            exit(0);
+            #endif
             return;
         }
 }
