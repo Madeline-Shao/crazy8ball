@@ -139,10 +139,9 @@ body_t *get_object(scene_t *scene, char *name){
     return NULL;
 }
 
-body_t *create_ball(scene_t *scene, char *info, SDL_Surface *img){
+body_t *create_ball(char *info, SDL_Surface *img){
     body_t *ball = body_init_with_info(circle_init(BALL_RADIUS), BALL_MASS, WHITE_COLOR, img,
                                         2*BALL_RADIUS, 2*BALL_RADIUS, info, NULL);
-    // scene_add_body(scene, ball);
     return ball;
 }
 

@@ -48,16 +48,16 @@ void game_setup_add_balls(scene_t *scene) {
         SDL_Surface *ball_image = IMG_Load(name);
         body_t *pool_ball;
         if (i < EIGHT_BALL_NUM) {
-            pool_ball = create_ball(scene, "SOLID_BALL", ball_image);
+            pool_ball = create_ball("SOLID_BALL", ball_image);
         }
         else if (i == EIGHT_BALL_NUM) {
-            pool_ball = create_ball(scene, "8_BALL", ball_image);
+            pool_ball = create_ball("8_BALL", ball_image);
         }
         else if (i == CUE_BALL_NUM) {
-            pool_ball = create_ball(scene, "CUE_BALL", ball_image);
+            pool_ball = create_ball("CUE_BALL", ball_image);
         }
         else {
-            pool_ball = create_ball(scene, "STRIPED_BALL", ball_image);
+            pool_ball = create_ball("STRIPED_BALL", ball_image);
         }
         if (i != CUE_BALL_NUM) {
             list_add(balls, pool_ball);

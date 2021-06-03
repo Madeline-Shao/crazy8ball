@@ -134,12 +134,11 @@ body_t *get_object(scene_t *scene, char *name);
 /**
  * Creates a body with a circle shape of BALL_RADIUS, mass of BALL_MASS, white color,
  * the given image, height and width of twice BALL_RADIUS, and the given body info.
- * @param scene - The scene containing the bodies
  * @param info - The body info
  * @param img - The image as an SDL_Surface
  * @return A pointer to the body
  */
-body_t *create_ball(scene_t *scene, char *info, SDL_Surface *img);
+body_t *create_ball(char *info, SDL_Surface *img);
 
 /**
  * Changes the image of the body with the given body info to the given text, font, and color.
