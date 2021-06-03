@@ -309,8 +309,8 @@ void game_setup_add_background(scene_t *scene) {
 void sound_setup() {
     Mix_OpenAudio(FREQUENCY, AUDIO_S16SYS, STEREO, CHUNK_SIZE);
     Mix_AllocateChannels(NUM_CHANNELS);
-    // Mix_Chunk *background = Mix_LoadWAV("sounds/TakeFive.wav");
-    // Mix_PlayChannel(BACKGROUND_CHANNEL, background, -1);
+    Mix_Chunk *background = Mix_LoadWAV("sounds/TakeFive.wav");
+    Mix_PlayChannel(BACKGROUND_CHANNEL, background, -1);
     Mix_Volume(BACKGROUND_CHANNEL, BACKGROUND_VOLUME);
     for (int chan = COLLISION_CHANNEL_START; chan < NUM_CHANNELS; chan++) {
         Mix_Volume(chan, COLLISION_VOLUME);
