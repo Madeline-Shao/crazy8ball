@@ -109,24 +109,84 @@ rgb_color_t body_get_color(body_t *body);
  */
 void *body_get_info(body_t *body);
 
+/**
+ * Gets the image associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @return the SDL_Surface that is the image
+ */
 SDL_Surface *body_get_image(body_t *body);
 
+/**
+ * Gets the height associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @return the height of the body
+ */
 double body_get_height(body_t *body);
 
+/**
+ * Gets the width associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @return the width of the body
+ */
 double body_get_width(body_t *body);
 
+/**
+ * Gets the origin associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @return the origin of the body
+ */
 vector_t body_get_origin(body_t *body);
 
+/**
+ * Sets the height associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @param height height of the body
+ */
 void body_set_height(body_t *body, double height);
 
+/**
+ * Sets the width associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @param width width of the body
+ */
 void body_set_width(body_t *body, double width);
 
+/**
+ * Gets the angle associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @return the angle of the body
+ */
 double body_get_angle(body_t *body);
 
+/**
+ * Sets the image associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @param image image of the body
+ */
 void body_set_image(body_t *body, SDL_Surface *image);
 
+/**
+ * Sets the mass associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @param mass mass of the body
+ */
 void body_set_mass(body_t *body, double mass);
 
+/**
+ * Sets the color associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @param color color of the body
+ */
 void body_set_color(body_t *body, rgb_color_t color);
 
 /**
