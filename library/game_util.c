@@ -147,7 +147,6 @@ body_t *create_ball(scene_t *scene, char *info, SDL_Surface *img){
 }
 
 void change_text(scene_t *scene, char *info, char *text, TTF_Font *font, SDL_Color color){
-    // TTF_Font* inspace_font = TTF_OpenFont("fonts/InspaceDemoRegular.ttf", 100);
     SDL_Surface *new_text = TTF_RenderText_Solid(font, text, color);
     body_set_image(get_object(scene, info), new_text);
 }

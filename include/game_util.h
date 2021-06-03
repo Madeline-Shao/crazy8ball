@@ -98,16 +98,62 @@ extern const int TRIANGLE_HEIGHT_FACTOR;
 extern const int WALL_DIFF_FACTOR;
 extern const int TEXT_TYPE_INDICATOR_FACTOR;
 
+/**
+ * Checks if the given coordinates are within a circle of radius BALL_RADIUS
+ * and centered at the centroid.
+ * @param x - The x-coordinate
+ * @param y - The y-coordinate
+ * @param centroid - The center of the circle
+ * @return True if the coordinates are within the circle, false otherwise.
+ */
 bool overlaps(double x, double y, vector_t centroid);
 
+/**
+ * Creates a list of points of a rectangle of the given width and height.
+ * @param width - The width of the rectangle
+ * @param height - The height of a rectangle
+ * @return A pointer to the list of points in the rectangle
+ */
 list_t *rect_init(double width, double height);
 
+/**
+ * Creates a list of points of a circle of the given radius.
+ * @param radius - The radius of the circle
+ * @return A pointer to the list of points in the circle
+ */
 list_t *circle_init(double radius);
 
+/**
+ * Gets the first body from a scene with the given body info.
+ * @param scene - The scene containing the bodies
+ * @param name - The desired body info
+ * @return A pointer to the body with the given body info
+ */
 body_t *get_object(scene_t *scene, char *name);
 
+/**
+ * Creates a body with a circle shape of BALL_RADIUS, mass of BALL_MASS, white color,
+ * the given image, height and width of twice BALL_RADIUS, and the given body info.
+ * @param scene - The scene containing the bodies
+ * @param info - The body info
+ * @param img - The image as an SDL_Surface
+ * @return A pointer to the body
+ */
 body_t *create_ball(scene_t *scene, char *info, SDL_Surface *img);
 
+/**
+ * Changes the image of the body with the given body info to the given text, font, and color.
+ * @param scene - The scene containing the body
+ * @param info - The body info
+ * @param text - The new text
+ * @param font - The font
+ * @param color - The color
+ */
 void change_text(scene_t *scene, char *info, char *text, TTF_Font *font, SDL_Color color);
 
+/**
+ * Plays a given sound file in the given channel
+ * @param channel - The channel number
+ * @param sound_file - The name of the sound file
+ */
 void play_sound(int channel, char *sound_file);

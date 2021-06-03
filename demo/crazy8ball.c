@@ -21,6 +21,9 @@
 #include "game_setup.h"
 #include "power_effects.h"
 
+/**
+ * Associates the arrow keys with a character.
+ */
 typedef enum {
     LEFT_ARROW_CHAR = '!',
     UP_ARROW_CHAR = '#',
@@ -28,6 +31,13 @@ typedef enum {
     DOWN_ARROW_CHAR = '$'
 } arrow_key_char_t;
 
+/**
+ * Handles collisions between two balls and plays a sound of balls colliding.
+ * @param body1 - The first ball
+ * @param body2 - The second ball
+ * @param axis - The axis of collision
+ * @param aux - An auxiliary value
+ */
 void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *aux){
     int channel = *(int *)aux;
     play_sound(channel, "sounds/balls_colliding.wav");
@@ -50,6 +60,14 @@ void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *
 }
 
 // SHE DID INDEED SAY THAT
+/**
+ * Handles the collision when the ball goes into a hole. Plays a sound and makes the ball
+ * disappear.
+ * @param ball - The ball
+ * @param hole - The hole
+ * @param axis - The axis of collision
+ * @param aux - An auxiliary value
+ */
 void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
     play_sound(POCKET_CHANNEL, "sounds/pocket.wav");
     list_add(game_state_get_balls_sunk(scene_get_game_state((scene_t *) aux)), ball);
@@ -57,6 +75,14 @@ void ball_destroy(body_t *ball, body_t *hole, vector_t axis, void *aux) {
     body_set_velocity(ball, VEC_ZERO);
 }
 
+/**
+ * Handles the rotation of the cue stick according to the mouse motion.
+ * @param x - The x position of the mouse
+ * @param y - The y position of the mouse
+ * @param xrel - The x velocity of the mouse
+ * @param yrel - The y velocity of the mouse
+ * @param aux - An auxiliary value
+ */
 void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
     // if on cue ball then move cue ball
     // if on force bar then change prepare to shoot stick
@@ -145,6 +171,14 @@ void rotation_handler(double x, double y, double xrel, double yrel, void *aux) {
     }
 }
 
+/**
+ * Handles the movement of the slider and the cue stick according to the mouse motion.
+ * @param x - The x position of the mouse
+ * @param y - The y position of the mouse
+ * @param xrel - The x velocity of the mouse
+ * @param yrel - The y velocity of the mouse
+ * @param aux - An auxiliary value
+ */
 void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *button = get_object((scene_t *) aux, "BUTTON");
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
@@ -161,6 +195,14 @@ void slider_handler(double x, double y, double xrel, double yrel, void *aux) {
     }
 }
 
+/**
+ * Handles the movement of the cue ball up and down according to the mouse motion.
+ * @param x - The x position of the mouse
+ * @param y - The y position of the mouse
+ * @param xrel - The x velocity of the mouse
+ * @param yrel - The y velocity of the mouse
+ * @param aux - An auxiliary value
+ */
 void cue_ball_up_down_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
@@ -174,6 +216,14 @@ void cue_ball_up_down_handler(double x, double y, double xrel, double yrel, void
     }
 }
 
+/**
+ * Handles the movement of the cue ball according to the mouse motion.
+ * @param x - The x position of the mouse
+ * @param y - The y position of the mouse
+ * @param xrel - The x velocity of the mouse
+ * @param yrel - The y velocity of the mouse
+ * @param aux - An auxiliary value
+ */
 void cue_ball_handler(double x, double y, double xrel, double yrel, void *aux) {
     body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
     body_t *cue_stick = get_object((scene_t *) aux, "CUE_STICK");
@@ -203,6 +253,12 @@ void cue_ball_handler(double x, double y, double xrel, double yrel, void *aux) {
     }
 }
 
+/**
+ * Handles the shooting of the stick, adding an impulse to the cue ball, playing a sound,
+ * resetting the positions of the slider and cue stick.
+ * @param y - The y position of the mouse
+ * @param aux - An auxiliary value
+ */
 void shoot_handler(double y, void *aux){
     body_t *button = get_object((scene_t *) aux, "BUTTON");
     body_t *cue_ball = get_object((scene_t *) aux, "CUE_BALL");
@@ -225,6 +281,12 @@ void shoot_handler(double y, void *aux){
     body_set_centroid(button, (vector_t) {SLIDER_X, BUTTON_Y});
 }
 
+/**
+ * Checks if given body overlaps with any of the balls in the scene
+ * @param scene - The scene containing the balls
+ * @param body - The given body
+ * @return True if the body overlaps with any of the balls, false otherwise
+ */
 bool ball_overlap(scene_t *scene, body_t *body){
     for(int i = 0; i < scene_bodies(scene); i++){
         body_t *body1 = scene_get_body(scene, i);
@@ -239,6 +301,11 @@ bool ball_overlap(scene_t *scene, body_t *body){
     return false;
 }
 
+/**
+ * Checks if the bodies in the scene are stopped (zero velocity).
+ * @param scene - The scene containing the bodies
+ * @return True if all the bodies are stopped, false otherwise.
+ */
 bool is_balls_stopped(scene_t *scene) {
     for (int i = 0; i < scene_bodies(scene); i++) {
         body_t *body = scene_get_body(scene, i);
@@ -250,6 +317,11 @@ bool is_balls_stopped(scene_t *scene) {
     return true;
 }
 
+/**
+ * Checks if the current player has sunk all their balls.
+ * @param scene - The scene containing the bodies
+ * @return True if the current player has sunk all their balls, false otherwise
+ */
 bool self_balls_done(scene_t *scene) {
     for (int i = 0; i < scene_bodies(scene);i++) {
         body_t *ball = scene_get_body(scene, i);
@@ -260,6 +332,10 @@ bool self_balls_done(scene_t *scene) {
     return true;
 }
 
+/**
+ * Clears the scene of all the balls, the cue stick, the turn text, and the type indicator.
+ * @param scene - The scene containing the bodies.
+ */
 void clear_scene(scene_t *scene) {
     for (int i = 0; i < scene_bodies(scene); i++) {
         body_t *body = scene_get_body(scene, i);
@@ -272,6 +348,12 @@ void clear_scene(scene_t *scene) {
     }
 }
 
+/**
+ * Handles the gameplay, including turns, win conditions, power ups/downs, etc.
+ * Updates bodies as necessary.
+ * @param scene - The scene containing the bodies
+ * @param font - The font of the text
+ */
 void gameplay_handler(scene_t *scene, TTF_Font *font) {
     game_state_t *game_state = scene_get_game_state(scene);
 
@@ -288,32 +370,28 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             && !strcmp(body_get_info(list_get(balls_sunk, i)), game_state_get_current_type(scene_get_game_state(scene)))
             && !applied_power){
             float power_rand = rand() / (float) RAND_MAX;
-            // if (power_rand > 0.0 && power_rand <= POWER_PROBABILITY_SPACING){
-            //   if (power_rand > 0.0 && power_rand <= 0.25){
-            //     add_balls_powerup(scene, (collision_handler_t) balls_collision_handler, (collision_handler_t) ball_destroy);
-            //     applied_power = true;
-            //     game_state_set_balls_powerup(game_state, true);
-            //     change_text(scene, "POWER_TEXT", "POWER UP: 2 extra balls are forced upon your opponent!",
-            //                 font, GOLD_COLOR_SDL);
-            // }
-            // // else if (power_rand > POWER_PROBABILITY_SPACING && power_rand <= 2 * POWER_PROBABILITY_SPACING){
-            //   else if (power_rand > 0.25 && power_rand <= 2 * 0.5){
-            //     add_ghost_powerup(scene, 0.0);
-            //     game_state_set_ghost_powerup(game_state, true);
-            //     applied_power = true;
-            //     change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!",
-            //                 font, GOLD_COLOR_SDL);
-            // }
-            // else if (power_rand > 2 * POWER_PROBABILITY_SPACING && power_rand <= 3 * POWER_PROBABILITY_SPACING){
-              if (power_rand > 0.0 && power_rand <= 0.5){
+            if (power_rand > 0.0 && power_rand <= POWER_PROBABILITY_SPACING){
+                add_balls_powerup(scene, (collision_handler_t) balls_collision_handler, (collision_handler_t) ball_destroy);
+                applied_power = true;
+                game_state_set_balls_powerup(game_state, true);
+                change_text(scene, "POWER_TEXT", "POWER UP: 2 extra balls are forced upon your opponent!",
+                            font, GOLD_COLOR_SDL);
+            }
+            else if (power_rand > POWER_PROBABILITY_SPACING && power_rand <= 2 * POWER_PROBABILITY_SPACING){
+                add_ghost_powerup(scene, 0.0);
+                game_state_set_ghost_powerup(game_state, true);
+                applied_power = true;
+                change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!",
+                            font, GOLD_COLOR_SDL);
+            }
+            else if (power_rand > 2 * POWER_PROBABILITY_SPACING && power_rand <= 3 * POWER_PROBABILITY_SPACING){
                 add_size_powerdown(scene, SIZE_POWERDOWN_ADJUSTMENT_SCALE_FACTOR * BALL_RADIUS);
                 game_state_set_size_powerdown(game_state, true);
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER DOWN: Unfortunately, you now have gigantic balls!",
                             font, GOLD_COLOR_SDL);
             }
-            // else if (power_rand > 3 * POWER_PROBABILITY_SPACING && power_rand < 4 * POWER_PROBABILITY_SPACING){
-              else if (power_rand > 0.5 && power_rand <= 1){
+            else if (power_rand > 3 * POWER_PROBABILITY_SPACING && power_rand < 4 * POWER_PROBABILITY_SPACING){
                 game_state_set_turn_powerdown(game_state, true);
                 applied_power = true;
                 change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!",
@@ -483,6 +561,15 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     }
 }
 
+/**
+ * Handles the mouse click actions of the player, such as clicking buttons or moving the
+ * cue ball/cue stick/slider.
+ * @param key - The mouse button pressed
+ * @param type - The mouse event type
+ * @param x - The x coordinate of the mouse
+ * @param y - The y coordinate of the mouse
+ * @param aux - The auxiliary value
+ */
 void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, void *aux) {
     // do this if the game is not over yet
     if(key == SDL_BUTTON_LEFT && game_state_get_winner(scene_get_game_state((scene_t *)aux)) != NULL){
@@ -594,6 +681,13 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
 }
 
 // KONAMI
+/**
+ * Handles keyboard events for the Konami Code.
+ * @param key - The key pressed
+ * @param type - The type of key event
+ * @param held_time - The amount of time the key has been held down
+ * @param aux - An auxiliary value
+ */
 void player_key_handler(char key, key_event_type_t type, double held_time, void * aux) {
     if (type == MOUSE_UP){
         game_state_t *game_state = scene_get_game_state((scene_t *)aux);
@@ -619,6 +713,10 @@ void player_key_handler(char key, key_event_type_t type, double held_time, void 
     }
 }
 
+/**
+ * Adds forces between the bodies in the scene.
+ * @param scene - The scene containing the bodies
+ */
 void add_forces(scene_t *scene){
     int channel_num = COLLISION_CHANNEL_START;
     for(int i = 0; i < scene_bodies(scene) - 1; i++){
@@ -647,6 +745,10 @@ void add_forces(scene_t *scene){
     }
 }
 
+/**
+ * Sets the velocity of bodies in the scene to zero if their velocity is below a certain threshold.
+ * @param scene - The scene containing the bodies
+ */
 void stop_balls(scene_t *scene){
     for (int i = 0; i < scene_bodies(scene); i++) {
         body_t *body = scene_get_body(scene, i);
@@ -657,6 +759,11 @@ void stop_balls(scene_t *scene){
     }
 }
 
+/**
+ * Checks if the Konami Code has been entered. If so, the
+ * Easter Egg is initiated.
+ * @param scene - The scene containing the bodies.
+ */
 void konami_code(scene_t *scene) {
     game_state_t *game_state = scene_get_game_state(scene);
     if (!game_state_get_konami(game_state)) {
@@ -690,6 +797,10 @@ void konami_code(scene_t *scene) {
     }
 }
 
+/**
+ * Sets up SDL handlers, icon, and title.
+ * @param scene - The scene
+ */
 void SDL_setup(scene_t *scene) {
     sdl_on_mouse((mouse_handler_t)player_mouse_handler, scene);
     sdl_on_key((key_handler_t)player_key_handler, scene);
@@ -700,6 +811,11 @@ void SDL_setup(scene_t *scene) {
     sdl_set_title("Crazy 8 Ball");
 }
 
+/**
+ * Checks if it is the end of a turn, and if so, calls the gameplay handler.
+ * @param scene - The scene containing the bodies
+ * @param font - The font of the text
+ */
 void end_of_turn(scene_t *scene, TTF_Font *font) {
   if (game_state_get_end_of_turn(scene_get_game_state(scene)) && is_balls_stopped(scene)
             && game_state_get_winner(scene_get_game_state(scene)) == NULL){
