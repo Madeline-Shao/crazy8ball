@@ -587,10 +587,10 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
              // within instruction menu code; should work regardless of game_start status
              if (game_state_get_game_instructions(scene_get_game_state((scene_t *)aux))){
                  // close instruction menu if clicking on quit instructions button
-                 if (x >= QUIT_BUTTON_CENTROID.x - START_MENU_BUTTON_SIDE_LENGTH / 2
-                 && x <= QUIT_BUTTON_CENTROID.x + START_MENU_BUTTON_SIDE_LENGTH / 2
-                 && y >= QUIT_BUTTON_CENTROID.y - START_MENU_BUTTON_SIDE_LENGTH / 2
-                 && y <= QUIT_BUTTON_CENTROID.y + START_MENU_BUTTON_SIDE_LENGTH / 2){
+                 if (x >= QUIT_BUTTON_CENTROID.x - QUIT_BUTTON_SIDE_LENGTH / 2
+                 && x <= QUIT_BUTTON_CENTROID.x + QUIT_BUTTON_SIDE_LENGTH / 2
+                 && y >= QUIT_BUTTON_CENTROID.y - QUIT_BUTTON_SIDE_LENGTH / 2
+                 && y <= QUIT_BUTTON_CENTROID.y + QUIT_BUTTON_SIDE_LENGTH / 2){
                      body_remove(get_object((scene_t *) aux, "INSTRUCTIONS"));
                      body_remove(get_object((scene_t *) aux, "INSTR_QUIT"));
                      game_state_set_game_instructions(scene_get_game_state((scene_t *)aux), false);
