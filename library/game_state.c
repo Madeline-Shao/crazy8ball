@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "body.h"
 #include "list.h"
+#include "game_util.h"
 #include "game_state.h"
 
 typedef struct game_state{
@@ -44,7 +45,7 @@ game_state_t *game_state_init(void){
     new_game_state->game_start = false;
     new_game_state->game_instructions = false;
     new_game_state->game_quit = false;
-    new_game_state->keys = list_init(10, NULL);
+    new_game_state->keys = list_init(KONAMI_CODE_LENGTH, NULL);
     new_game_state->konami = false;
     return new_game_state;
 }
