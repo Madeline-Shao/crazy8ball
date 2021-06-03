@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <emscripten.h>
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
@@ -828,27 +829,44 @@ void end_of_turn(scene_t *scene, TTF_Font *font) {
         }
 }
 
-int main(){
+bool inited = false;
+scene_t *scene;
+TTF_Font* font;
+
+void init() {
     sdl_init(LOW_LEFT_CORNER, HIGH_RIGHT_CORNER);
-    scene_t *scene = scene_init();
+    scene = scene_init();
     game_state_t *game_state = game_state_init();
     scene_set_game_state(scene, game_state);
 
     TTF_Init();
-    TTF_Font* font = TTF_OpenFont("fonts/BebasNeue-Regular.TTF", FONT_SIZE);
+    font = TTF_OpenFont("fonts/BebasNeue-Regular.TTF", FONT_SIZE);
     game_setup(scene, font);
     SDL_setup(scene);
     add_forces(scene);
+}
 
-    while (!sdl_is_done()){
+void c_main(){
+        if (!inited) {
+            init();
+            inited = true;
+        }
         if(game_state_get_game_quit(scene_get_game_state(scene))){
-            break;
+            emscripten_cancel_main_loop();
+            return;
         }
         sdl_render_scene(scene);
         scene_tick(scene, time_since_last_tick());
         stop_balls(scene);
         konami_code(scene);
         end_of_turn(scene, font);
-    }
-    scene_free(scene);
+        if (sdl_is_done()) {
+            emscripten_cancel_main_loop();
+            return;
+        }
+}
+
+
+int main() {
+    emscripten_set_main_loop(c_main, 60, 1);
 }

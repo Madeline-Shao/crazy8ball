@@ -45,14 +45,14 @@ void add_balls_powerup(scene_t *scene, collision_handler_t balls_collision_handl
     if (!strcmp(game_state_get_current_type(scene_get_game_state(scene)), "SOLID_BALL")){
         for (int i = 0; i < 2; i++){
             SDL_Surface *image = IMG_Load("images/special_striped_ball.png");
-            body_t *ball = create_ball(scene, "STRIPED_BALL", image);
+            body_t *ball = create_ball("STRIPED_BALL", image);
             list_add(ball_list, ball);
         }
     }
     else {
         for (int i = 0; i < 2; i++){
             SDL_Surface *image = IMG_Load("images/special_solid_ball.png");
-            body_t *ball = create_ball(scene, "SOLID_BALL", image);
+            body_t *ball = create_ball("SOLID_BALL", image);
             list_add(ball_list, ball);
         }
     }

@@ -10,7 +10,7 @@ STUDENT_LIBS = vector list polygon color body scene forces collision force_param
 ifneq ($(OS), Windows_NT)
 
 # Use clang as the C compiler
-CC = clang
+CC = emcc#clang
 # Flags to pass to clang:
 # -Iinclude tells clang to look for #include files in the "include" folder
 # -Wall turns on all warnings
@@ -18,7 +18,8 @@ CC = clang
 # -fno-omit-frame-pointer allows stack traces to be generated
 #   (take CS 24 for a full explanation)
 # -fsanitize=address enables asan
-CFLAGS = -Iinclude $(shell sdl2-config --cflags | sed -e "s/include\/SDL2/include/") -Wall -g -fno-omit-frame-pointer -fsanitize=address -Wno-nullability-completeness
+EMCC_FLAGS =  -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=655360000 -s USE_SDL=2 -s USE_SDL_GFX=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_SDL_MIXER=2 -s ASSERTIONS=1 -O3 --preload-file images --preload-file fonts --use-preload-plugins
+CFLAGS =  $(EMCC_FLAGS) -Iinclude $(shell sdl2-config --cflags | sed -e "s/include\/SDL2/include/") -Wall -g -fno-omit-frame-pointer #-fsanitize=address -Wno-nullability-completeness
 # Compiler flag that links the program with the math library
 LIB_MATH = -lm
 # Compiler flags that link the program with the math and SDL libraries.
@@ -88,7 +89,7 @@ bin/breakout: out/breakout.o out/sdl_wrapper.o $(STUDENT_OBJS)
 		$(CC) $(CFLAGS) $(LIBS) $^ -o $@
 
 bin/crazy8ball: out/crazy8ball.o out/sdl_wrapper.o $(STUDENT_OBJS)
-		$(CC) $(CFLAGS) $(LIBS) $^ -o $@
+		$(CC) $(CFLAGS) $(LIBS) $^ -o output.html 
 
 # Builds the test suite executables from the corresponding test .o file
 # and the library .o files. The only difference from the demo build command
