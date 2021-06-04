@@ -224,9 +224,13 @@ void body_set_velocity(body_t *body, vector_t v);
  */
 void body_set_rotation(body_t *body, double angle);
 
-
+/**
+ * Sets the origin associated with a body.
+ *
+ * @param body a pointer to a body returned from body_init()
+ * @param origin origin of the body
+ */
 void body_set_origin(body_t *body, vector_t origin);
-
 
 /**
  * Applies a force to a body over the current tick.
