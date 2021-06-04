@@ -30,6 +30,7 @@ scene_t *scene_init(void){
 void scene_free(scene_t *scene){
     free(scene->body_list);
     list_free(scene->force_list);
+    game_state_free(scene->game_state);
     free(scene);
 }
 
@@ -83,7 +84,7 @@ void scene_tick(scene_t *scene, double dt){
         bool remove = false;
         for (size_t j = 0; j < list_size(force_bodies); j++){
             if (body_is_removed(list_get(force_bodies, j))){
-                remove = true; 
+                remove = true;
             }
         }
         if (remove){

@@ -125,6 +125,8 @@ void collision_creator(collision_params_t *params){
     else if(!collided.collided){
         collision_params_set_colliding(params, false);
     }
+    list_free(shape1);
+    list_free(shape2);
 }
 
 

@@ -87,8 +87,9 @@ body_t *body_init_with_info(
 void body_free(body_t *body){
     if (body->info_freer != NULL)
         body->info_freer(body->info);
-    free(body->shape);
+    list_free(body->shape);
     free(body->velocity);
+    SDL_FreeSurface(body->image);
     free(body);
 }
 
@@ -153,6 +154,7 @@ void body_set_width(body_t *body, double width){
 }
 
 void body_set_image(body_t *body, SDL_Surface *image) {
+    SDL_FreeSurface(body->image);
     body->image = image;
 }
 
@@ -173,10 +175,9 @@ void body_set_shape(body_t *body, list_t *shape, vector_t current_pos){
 }
 
 void body_set_velocity(body_t *body, vector_t v){
-    vector_t *velocity = malloc(sizeof(vector_t));
+    vector_t *velocity = body->velocity;
     velocity->x = v.x;
     velocity->y = v.y;
-    body->velocity = velocity;
 }
 
 void body_set_rotation(body_t *body, double angle){

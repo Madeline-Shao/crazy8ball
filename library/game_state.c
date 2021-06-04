@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include "body.h"
 #include "list.h"
-#include "game_util.h"
 #include "game_state.h"
 
 typedef struct game_state{
@@ -26,6 +25,8 @@ typedef struct game_state{
     bool konami;
 } game_state_t;
 
+const int konami_length = 10;
+
 game_state_t *game_state_init(void){
     game_state_t *new_game_state = malloc(sizeof(game_state_t));
     assert(new_game_state != NULL);
@@ -34,7 +35,7 @@ game_state_t *game_state_init(void){
     new_game_state->player_1_type = NULL;
     new_game_state->player_2_type = NULL;
     new_game_state->end_of_turn = false;
-    list_t *balls_sunk = list_init(1, (free_func_t) body_free);
+    list_t *balls_sunk = list_init(1, NULL);
     new_game_state->balls_sunk = balls_sunk;
     new_game_state->cue_ball_sunk = false;
     new_game_state->winner = NULL;
@@ -45,9 +46,15 @@ game_state_t *game_state_init(void){
     new_game_state->game_start = false;
     new_game_state->game_instructions = false;
     new_game_state->game_quit = false;
-    new_game_state->keys = list_init(KONAMI_CODE_LENGTH, NULL);
+    new_game_state->keys = list_init(konami_length, NULL);
     new_game_state->konami = false;
     return new_game_state;
+}
+
+void game_state_free(game_state_t *game_state) {
+  list_free(game_state->keys);
+  list_free(game_state->balls_sunk);
+  free(game_state);
 }
 
 bool game_state_get_game_quit(game_state_t *game_state){

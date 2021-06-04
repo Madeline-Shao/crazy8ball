@@ -39,8 +39,7 @@ typedef enum {
  * @param aux - An auxiliary value
  */
 void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *aux){
-    int channel = *(int *)aux;
-    play_sound(channel, "sounds/balls_colliding.wav");
+    play_sound(-1, "sounds/balls_colliding.wav");
 
     double u1 = vec_dot(axis, body_get_velocity(body1));
     double u2 = vec_dot(axis, body_get_velocity(body2));
@@ -59,7 +58,6 @@ void balls_collision_handler(body_t *body1, body_t *body2, vector_t axis, void *
     body_add_impulse(body2, vec_multiply(-1, impulse));
 }
 
-// SHE DID INDEED SAY THAT
 /**
  * Handles the collision when the ball goes into a hole. Plays a sound and makes the ball
  * disappear.
@@ -210,7 +208,9 @@ void cue_ball_up_down_handler(double x, double y, double xrel, double yrel, void
     if (y < table_centroid.y + TABLE_HEIGHT / 2 - TABLE_WALL_THICKNESS - WALL_THICKNESS / 2 -
         BALL_RADIUS && y > table_centroid.y - TABLE_HEIGHT/ 2 + TABLE_WALL_THICKNESS + WALL_THICKNESS / 2 + BALL_RADIUS){
         body_set_centroid(cue_ball, (vector_t) {body_get_centroid(cue_ball).x, y});
-        vector_t cue_centroid = vec_add(body_get_centroid(cue_ball), (vector_t) {BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2, 0});
+        vector_t cue_centroid = vec_add(body_get_centroid(cue_ball),
+                                    (vector_t) {(BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * cos(body_get_angle(cue_stick)),
+                                                (BALL_RADIUS * 2 + CUE_STICK_WIDTH / 2) * sin(body_get_angle(cue_stick))});
         body_set_centroid(cue_stick, cue_centroid);
         body_set_origin(cue_stick, body_get_centroid(cue_ball));
     }
@@ -348,6 +348,17 @@ void clear_scene(scene_t *scene) {
     }
 }
 
+void win_handling(scene_t *scene, TTF_Font *font, int winner_num) {
+    game_state_t * game_state = scene_get_game_state(scene);
+    char winner[9];
+    snprintf(winner, WINNER_TEXT_LENGTH, "Player %d", winner_num);
+    game_state_set_winner(game_state, winner);
+    char win_message[17];
+    snprintf(win_message, WIN_MESSAGE_LENGTH, "Winner: %s!", game_state_get_winner(game_state));
+    change_text(scene, "WIN_TEXT", win_message, font, WHITE_COLOR_SDL);
+    clear_scene(scene);
+}
+
 /**
  * Handles the gameplay, including turns, win conditions, power ups/downs, etc.
  * Updates bodies as necessary.
@@ -360,6 +371,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
     bool switch_turn = false;
     bool self_balls_sunk = false;
     bool cue_ball_sunk = false;
+    int winner_num = -1;
 
     change_text(scene, "POWER_TEXT", "", font, GOLD_COLOR_SDL);
 
@@ -381,7 +393,7 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
                 add_ghost_powerup(scene, 0.0);
                 game_state_set_ghost_powerup(game_state, true);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER UP: You don't have to touch your opponent's balls!",
+                change_text(scene, "POWER_TEXT", "POWER UP: You can shoot through your opponent's balls!",
                             font, GOLD_COLOR_SDL);
             }
             else if (power_rand > 2 * POWER_PROBABILITY_SPACING && power_rand <= 3 * POWER_PROBABILITY_SPACING){
@@ -394,10 +406,11 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
             else if (power_rand > 3 * POWER_PROBABILITY_SPACING && power_rand < 4 * POWER_PROBABILITY_SPACING){
                 game_state_set_turn_powerdown(game_state, true);
                 applied_power = true;
-                change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, you may no longer play with your balls!",
+                change_text(scene, "POWER_TEXT", "POWER DOWN: Sorry, your turn has ended!",
                             font, GOLD_COLOR_SDL);
                 switch_turn = true;
             }
+            // SHE DID INDEED SAY THAT
         }
 
         body_t *ball = list_get(balls_sunk, i);
@@ -410,30 +423,30 @@ void gameplay_handler(scene_t *scene, TTF_Font *font) {
         // 8 ball is sunk and all of your own balls are already sunk
         else if (!strcmp(body_get_info(ball), "8_BALL") && game_state_get_current_type(scene_get_game_state(scene)) != NULL
                  && self_balls_done(scene)) {
-            char winner[9];
-            snprintf(winner, WINNER_TEXT_LENGTH, "Player %zu", game_state_get_curr_player_turn(game_state));
-            game_state_set_winner(game_state, winner);
-            char win_message[17];
-            snprintf(win_message, WIN_MESSAGE_LENGTH, "Winner: %s!", game_state_get_winner(game_state));
-            change_text(scene, "WIN_TEXT", win_message, font, WHITE_COLOR_SDL);
-            clear_scene(scene);
+            winner_num = game_state_get_curr_player_turn(game_state);
+
         }
         // 8 ball is sunk prematurely
         else if (!strcmp(body_get_info(ball), "8_BALL")) {
-            char winner[9];
-            snprintf(winner, WINNER_TEXT_LENGTH, "Player %zu", 3 - game_state_get_curr_player_turn(game_state));
-            game_state_set_winner(game_state, winner);
-
-            char win_message[17];
-            snprintf(win_message, WIN_MESSAGE_LENGTH, "Winner: %s!", game_state_get_winner(game_state));
-            change_text(scene, "WIN_TEXT", win_message, font, WHITE_COLOR_SDL);
-            clear_scene(scene);
+            winner_num = 3 - game_state_get_curr_player_turn(game_state);
         }
         // sink one of your own balls
         else if (game_state_get_current_type(game_state) != NULL && !strcmp(body_get_info(ball),
                  game_state_get_current_type(game_state))) {
             self_balls_sunk = true;
         }
+        //sink opponent ball
+        else if (game_state_get_current_type(game_state) != NULL && strcmp(body_get_info(ball),
+                 game_state_get_current_type(game_state))) {
+            switch_turn = true;
+        }
+    }
+    if (winner_num != -1) {
+      if (cue_ball_sunk) {
+        winner_num = 3 - winner_num;
+      }
+      win_handling(scene, font, winner_num);
+      return;
     }
     if (!cue_ball_sunk) {
         game_state_set_cue_ball_sunk(game_state, false);
@@ -649,7 +662,8 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                     game_state_t *game_state = scene_get_game_state((scene_t *) aux);
                     if (x >= body_get_centroid(button).x - BUTTON_WIDTH / 2
                         && x <= body_get_centroid(button).x + BUTTON_WIDTH / 2
-                        && y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
+                        &&
+                        y >= body_get_centroid(button).y - BUTTON_WIDTH / 2
                         && y <= body_get_centroid(button).y + BUTTON_WIDTH / 2){
                         sdl_on_motion((motion_handler_t)slider_handler, aux);
                     }
@@ -659,7 +673,8 @@ void player_mouse_handler(int key, mouse_event_type_t type, double x, double y, 
                             && y >= body_get_centroid(cue_ball).y - BALL_RADIUS
                             && y <= body_get_centroid(cue_ball).y + BALL_RADIUS
                             && (game_state_get_cue_ball_sunk(game_state)
-                            || game_state_get_first_turn(game_state))) {
+                            || game_state_get_first_turn(game_state))
+                            ) {
                         if (game_state_get_first_turn(game_state)){
                             sdl_on_motion((motion_handler_t)cue_ball_up_down_handler, aux);
                         }
@@ -718,7 +733,6 @@ void player_key_handler(char key, key_event_type_t type, double held_time, void 
  * @param scene - The scene containing the bodies
  */
 void add_forces(scene_t *scene){
-    int channel_num = COLLISION_CHANNEL_START;
     for(int i = 0; i < scene_bodies(scene) - 1; i++){
         body_t *body1 = scene_get_body(scene, i);
         if(!strcmp(body_get_info(body1), "SOLID_BALL") || !strcmp(body_get_info(body1), "STRIPED_BALL")
@@ -729,10 +743,7 @@ void add_forces(scene_t *scene){
                 if(!strcmp(body_get_info(body2), "SOLID_BALL") || !strcmp(body_get_info(body2), "STRIPED_BALL")
                    || !strcmp(body_get_info(body2), "8_BALL") || !strcmp(body_get_info(body2), "CUE_BALL")
                    || !strcmp(body_get_info(body2), "WALL")){
-                    int *aux = malloc(sizeof(int));
-                    *aux = channel_num;
-                    create_collision(scene, body1, body2, (collision_handler_t) balls_collision_handler, aux, NULL);
-                    channel_num++;
+                    create_collision(scene, body1, body2, (collision_handler_t) balls_collision_handler, NULL, NULL);
                 }
                 else if(!strcmp(body_get_info(body2), "HOLE")){
                     create_collision(scene, body1, body2, (collision_handler_t) ball_destroy, scene, NULL);
@@ -851,4 +862,7 @@ int main(){
         end_of_turn(scene, font);
     }
     scene_free(scene);
+    Mix_Quit();
+    IMG_Quit();
+    TTF_Quit();
 }

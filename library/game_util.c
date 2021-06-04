@@ -2,7 +2,7 @@
 
 const vector_t LOW_LEFT_CORNER = {0, 0};
 const vector_t HIGH_RIGHT_CORNER = {1500, 900};
-const double CIRCLE_POINTS = 10;
+const double CIRCLE_POINTS = 30;
 const double BALL_RADIUS = 12;
 const double BALL_MASS = 10;
 const double NUM_BALLS  = 16;

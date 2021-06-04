@@ -76,6 +76,7 @@ collision_info_t find_collision(list_t *shape1, list_t *shape2){
         projection_t projection2 = get_projection(shape2, axis);
         if (projection2.min > projection1.max || projection1.min > projection2.max){
             collision_info.collided = false;
+            list_free(axis_list);
             return collision_info;
         }
         if (projection1.max - projection2.min > 0 && projection1.min < projection2.max) {
@@ -97,5 +98,6 @@ collision_info_t find_collision(list_t *shape1, list_t *shape2){
     double r = sqrt(pow(separating_axis->x, 2) + pow(separating_axis->y, 2));
     vector_t collision_axis = {separating_axis->x / r, separating_axis->y / r};
     collision_info.axis = collision_axis;
+    list_free(axis_list);
     return collision_info;
 }

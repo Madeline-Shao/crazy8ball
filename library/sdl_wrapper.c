@@ -233,6 +233,7 @@ void sdl_draw_polygon(list_t *points, rgb_color_t color) {
     );
     free(x_points);
     free(y_points);
+    list_free(points);
 }
 
 void sdl_set_icon(SDL_Surface *surface){
@@ -280,14 +281,11 @@ void sdl_draw_sprite(body_t *body, scene_t *scene){
             SDL_RenderCopy(renderer, texture, NULL, boundary);
         }
         SDL_DestroyTexture(texture);
-        SDL_free(boundary);
+        free(boundary);
     }
     if (!strcmp(body_get_info(body), "INITIAL_LINE")){
         sdl_draw_polygon(body_get_shape(body), body_get_color(body));
     }
-    /*if (!strcmp(body_get_info(body), "CUE_STICK") || !strcmp(body_get_info(body), "SOLID_BALL") || !strcmp(body_get_info(body), "STRIPED_BALL") || !strcmp(body_get_info(body), "8_BALL") || !strcmp(body_get_info(body), "CUE_BALL")){
-        sdl_draw_polygon(body_get_shape(body), body_get_color(body));
-    }*/
 
 }
 
