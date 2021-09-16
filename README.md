@@ -1,4 +1,4 @@
-#Crazy 8 Ball
+<h1>Crazy 8 Ball</h1>
 
 Enhanced version of GamePigeon's 8 Ball with powerups, sound effects, background music, while working on a developed physics engine.
 
