@@ -1,4 +1,6 @@
-Enhanced version of GamePigeon's 8Ball with powerups, sound effects, background music, while working on a developed physics engine.
+#Crazy 8 Ball
+
+Enhanced version of GamePigeon's 8 Ball with powerups, sound effects, background music, while working on a developed physics engine.
 
 The game can be enjoyed here: http://www.its.caltech.edu/~blank/cs3-21sp/crazy8ball.html. Enter the Konami Code for a special surprise!
 
